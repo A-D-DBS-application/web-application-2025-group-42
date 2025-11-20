@@ -16,26 +16,42 @@ def index():
 @main.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form['username']
-        if User.query.filter_by(username=username).first() is None:
-            new_user = User(username=username)
-            db.session.add(new_user)
-            db.session.commit()
-            session['user_id'] = new_user.id
-            return redirect(url_for('main.index'))
-        return 'Username already registered'
+        name = request.form.get('name')
+        email = request.form.get('email')
+
+        # Check if user exists
+        if User.query.filter_by(email=email).first():
+            return "Email is already registered."
+
+        new_user = User(
+            name=name,
+            email=email,
+            password_hash="",   # niet nodig maar kolom vereist string
+        )
+
+        db.session.add(new_user)
+        db.session.commit()
+
+        session['user_id'] = new_user.id
+        return redirect(url_for('main.index'))
+
     return render_template('register.html')
+
 
 @main.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        user = User.query.filter_by(username=username).first()
-        if user:
-            session['user_id'] = user.id
-            return redirect(url_for('main.index'))
-        return 'User not found'
+        email = request.form.get('email')
+
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            return "No account found with that email."
+
+        session['user_id'] = user.id
+        return redirect(url_for('main.index'))
+
     return render_template('login.html')
+
 
 @main.route('/logout', methods=['POST'])
 def logout():
