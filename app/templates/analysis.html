@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VECTR Project Analysis</title>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom right, #dce6ff, #eef3ff);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 40px;
+        }
+
+        .container {
+            width: 60%;
+            max-width: 900px;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0px 4px 20px rgba(0,0,0,0.08);
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: bold;
+            color: #1b2d6b;
+            margin-bottom: 10px;
+        }
+
+        p.subtitle {
+            color: #555;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 20px;
+            margin-bottom: 6px;
+            color: #333;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+            background: #f7f8fa;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #4c68ff;
+            background: white;
+        }
+
+        .btn-submit {
+            margin-top: 30px;
+            width: 100%;
+            padding: 15px;
+            background: #0a0a23;
+            color: white;
+            font-size: 18px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-submit:hover {
+            background: #000016;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>VECTR Project Analysis</h1>
+        <p class="subtitle">Enter details for your first project</p>
+
+        <form method="POST">
+
+            <label>Project Name</label>
+            <input type="text" name="project_name" placeholder="Enter project name" required>
+
+            <label>Expected Profit ($)</label>
+            <input type="number" name="expected_profit" placeholder="Enter expected profit" required>
+
+            <label>Total Investment Cost ($)</label>
+            <input type="number" name="investment_cost" placeholder="Enter total investment cost" required>
+
+            <label>Confidence in Source (%)</label>
+            <input type="number" name="confidence" placeholder="Enter confidence (0-100)" required>
+
+            <label>Time to Value (months)</label>
+            <input type="number" name="time_to_value" placeholder="Enter time to value" required>
+
+            <button class="btn-submit" type="submit">View Analysis</button>
+        </form>
+    </div>
+</body>
+</html>

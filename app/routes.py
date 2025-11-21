@@ -10,7 +10,7 @@ def index():
     if 'user_id' in session:
         user = User.query.get(session['user_id'])
         listings = Listing.query.filter_by(user_id=user.id).all()  # Fetch listings for logged-in user
-        return render_template('index.html', username=user.username, listings=listings)
+        return render_template('index.html', username=user.name, listings=listings)
     return render_template('index.html', username=None)
 
 @main.route('/register', methods=['GET', 'POST'])
@@ -19,23 +19,26 @@ def register():
         name = request.form.get('name')
         email = request.form.get('email')
 
-        # Check if user exists
+        # Check if email already exists
         if User.query.filter_by(email=email).first():
             return "Email is already registered."
 
         new_user = User(
             name=name,
             email=email,
-            password_hash="",   # niet nodig maar kolom vereist string
+            password_hash="",  # not used
         )
 
         db.session.add(new_user)
         db.session.commit()
 
         session['user_id'] = new_user.id
-        return redirect(url_for('main.index'))
+
+        # Redirect to your analysis/project form
+        return redirect(url_for('main.analysis'))  # <-- HIER aanpassen
 
     return render_template('register.html')
+
 
 
 @main.route('/login', methods=['GET', 'POST'])
@@ -48,7 +51,8 @@ def login():
             return "No account found with that email."
 
         session['user_id'] = user.id
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.analysis'))
+
 
     return render_template('login.html')
 
@@ -56,7 +60,8 @@ def login():
 @main.route('/logout', methods=['POST'])
 def logout():
     session.pop('user_id', None)
-    return redirect(url_for('main.index'))
+    return redirect(url_for('main.analysis'))
+
 
 @main.route('/add-listing', methods=['GET', 'POST'])
 def add_listing():
@@ -77,3 +82,8 @@ def add_listing():
 def listings():
     all_listings = Listing.query.all()
     return render_template('listings.html', listings=all_listings)
+
+@main.route('/analysis')
+def analysis():
+    return render_template('analysis.html')
+
