@@ -18,3 +18,4 @@ Thumbs.db
 
 # Migration cache (optioneel)
 migrations/versions/*.pyc
+
