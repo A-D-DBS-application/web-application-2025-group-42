@@ -1,6 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
+from sqlalchemy.dialects.postgresql import UUID
 import uuid
 
 db = SQLAlchemy()
@@ -10,82 +10,66 @@ class Company(db.Model):
     __tablename__ = "company"
 
     id = db.Column(db.BigInteger, primary_key=True)
-    name = db.Column(db.String(255), nullable=False)
-    industry = db.Column(db.String(255))
-    founded_date = db.Column(db.Date)
+    name = db.Column(db.String, nullable=False, default="")
+    industry = db.Column(db.String, nullable=False, default="")
+    founded_date = db.Column(db.Date, nullable=False)
     description = db.Column(db.Text)
-    country = db.Column(db.String(255))
+    country = db.Column(db.String, nullable=False)
 
     users = db.relationship("User", back_populates="company", lazy="dynamic")
     requirements = db.relationship("Requirement", back_populates="company", lazy="dynamic")
     data_inputs = db.relationship("DataInput", back_populates="company", lazy="dynamic")
-
-    def __repr__(self):
-        return f"<Company {self.name}>"
 
 
 class User(db.Model):
     __tablename__ = "user"
 
     id = db.Column(db.BigInteger, primary_key=True)
-    name = db.Column(db.String(255), nullable=False)
-    email = db.Column(db.String(255), unique=True, index=True, nullable=False)
-    role = db.Column(db.String(100), nullable=True)
+    name = db.Column(db.String, nullable=False)
+    email = db.Column(db.String, nullable=False)
+    role = db.Column(db.String, nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
-    company_id = db.Column("company", db.BigInteger, db.ForeignKey("company.id"), nullable=True)
+
+    company_id = db.Column("company", db.BigInteger, db.ForeignKey("company.id"), nullable=False)
 
     company = db.relationship("Company", back_populates="users")
-    requirements_created = db.relationship(
-        "Requirement", back_populates="created_by_user", lazy="dynamic"
-    )
-
-    def __repr__(self):
-        return f"<User {self.email}>"
+    requirements_created = db.relationship("Requirement", back_populates="created_by_user", lazy="dynamic")
 
 
 class Requirement(db.Model):
     __tablename__ = "requirement"
 
     requirement_id = db.Column(db.BigInteger, primary_key=True)
-    name = db.Column(db.String(255), nullable=False)
-    company_id = db.Column(db.BigInteger, db.ForeignKey("company.id"), nullable=False)
-    created_by = db.Column(db.BigInteger, db.ForeignKey("user.id"), nullable=False)
+    name = db.Column(db.String)
+    company_id = db.Column(db.BigInteger, db.ForeignKey("company.id"))
+    created_by = db.Column(db.BigInteger, db.ForeignKey("user.id"))
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
 
     company = db.relationship("Company", back_populates="requirements")
     created_by_user = db.relationship("User", back_populates="requirements_created")
+
     data_inputs = db.relationship("DataInput", back_populates="requirement", lazy="dynamic")
     results = db.relationship("Result", back_populates="requirement", lazy="dynamic")
 
-    def __repr__(self):
-        return f"<Requirement {self.name}>"
-
-
 
 class DataInput(db.Model):
-    __tablename__ = "data_input"
+    __tablename__ = "data input"
 
     data_input_id = db.Column(db.BigInteger, primary_key=True)
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
-    analysis_id = db.Column(
-        UUID(as_uuid=True), default=uuid.uuid4, nullable=False
-    )
-    category = db.Column(db.String(255))
+    analysis_id = db.Column(UUID(as_uuid=True), default=uuid.uuid4, nullable=False, unique=True)
+    category = db.Column(db.String, nullable=False, default="")
     expected_profit = db.Column(db.Float)
     total_investment_cost = db.Column(db.Float)
-    company_id = db.Column(db.BigInteger, db.ForeignKey("company.id"), nullable=False)
-    requirement_id = db.Column(
-        db.BigInteger, db.ForeignKey("requirement.requirement_id"), nullable=False
-    )
-    time_to_market_days = db.Column(db.Integer)
-    time_to_business_days = db.Column(db.Integer)
+    company_id = db.Column(db.BigInteger, db.ForeignKey("company.id"), nullable=False, unique=True)
+    requirement_id = db.Column(db.BigInteger, db.ForeignKey("requirement.requirement_id"))
+    time_to_market_days = db.Column(db.BigInteger)
+    time_to_business_days = db.Column(db.BigInteger)
 
     company = db.relationship("Company", back_populates="data_inputs")
     requirement = db.relationship("Requirement", back_populates="data_inputs")
-    results = db.relationship("Result", back_populates="data_input", lazy="dynamic")
 
-    def __repr__(self):
-        return f"<DataInput {self.data_input_id}>"
+    results = db.relationship("Result", back_populates="data_input", lazy="dynamic")
 
 
 class Result(db.Model):
@@ -93,18 +77,12 @@ class Result(db.Model):
 
     id = db.Column(db.BigInteger, primary_key=True)
     roi_percentage = db.Column(db.Float)
-    time_to_value_days = db.Column(db.Integer)
+    time_to_value_days = db.Column(db.BigInteger)
     confidence_value = db.Column(db.Float)
     created_at = db.Column(db.Date)
-    requirement_id = db.Column(
-        db.BigInteger, db.ForeignKey("requirement.requirement_id"), nullable=False
-    )
-    data_input_id = db.Column(
-        db.BigInteger, db.ForeignKey("data_input.data_input_id"), nullable=False
-    )
+
+    requirement_id = db.Column(db.BigInteger, db.ForeignKey("requirement.requirement_id"))
+    data_input_id = db.Column(db.BigInteger, db.ForeignKey("data input.data_input_id"))
 
     requirement = db.relationship("Requirement", back_populates="results")
     data_input = db.relationship("DataInput", back_populates="results")
-
-    def __repr__(self):
-        return f"<Result {self.id}>"
