@@ -1,32 +1,37 @@
-# app/routes.py
-
 from flask import Blueprint, request, redirect, url_for, render_template, session
-from .models import db, User, Listing
+from .models import db, User
 
 main = Blueprint('main', __name__)
 
+
 @main.route('/')
 def index():
+    """Homepage: toon eventueel de naam van de ingelogde user."""
+    username = None
     if 'user_id' in session:
         user = User.query.get(session['user_id'])
-        listings = Listing.query.filter_by(user_id=user.id).all()  # Fetch listings for logged-in user
-        return render_template('index.html', username=user.name, listings=listings)
-    return render_template('index.html', username=None)
+        if user:
+            username = user.name
+
+    # Je index.html kan hier bijvoorbeeld een welkomstscherm tonen
+    return render_template('index.html', username=username)
+
 
 @main.route('/register', methods=['GET', 'POST'])
 def register():
+    """Registratie: nieuwe user opslaan in je Supabase-database via SQLAlchemy."""
     if request.method == 'POST':
         name = request.form.get('name')
         email = request.form.get('email')
 
-        # Check if email already exists
+        # Check of email al bestaat
         if User.query.filter_by(email=email).first():
             return "Email is already registered."
 
         new_user = User(
             name=name,
             email=email,
-            password_hash="",  # not used
+            password_hash=""  # voorlopig nog niet gebruikt
         )
 
         db.session.add(new_user)
@@ -34,12 +39,15 @@ def register():
 
         session['user_id'] = new_user.id
 
+        # Na registratie naar analysis (of waar je wil)
         return redirect(url_for('main.analysis'))
 
     return render_template('register.html')
 
+
 @main.route('/login', methods=['GET', 'POST'])
 def login():
+    """Login op basis van e-mailadres (nog zonder wachtwoordcontrole)."""
     if request.method == 'POST':
         email = request.form.get('email')
 
@@ -50,34 +58,17 @@ def login():
         session['user_id'] = user.id
         return redirect(url_for('main.analysis'))
 
-
     return render_template('login.html')
+
 
 @main.route('/logout', methods=['POST'])
 def logout():
+    """Uitloggen: user_id uit de sessie verwijderen."""
     session.pop('user_id', None)
-    return redirect(url_for('main.analysis'))
+    return redirect(url_for('main.index'))
 
-@main.route('/add-listing', methods=['GET', 'POST'])
-def add_listing():
-    if 'user_id' not in session:
-        return redirect(url_for('main.login'))
-    
-    if request.method == 'POST':
-        listing_name = request.form['listing_name']
-        price = float(request.form['price'])
-        new_listing = Listing(listing_name=listing_name, price=price, user_id=session['user_id'])
-        db.session.add(new_listing)
-        db.session.commit()
-        return redirect(url_for('main.listings'))
-
-    return render_template('add_listing.html')
-
-@main.route('/listings')
-def listings():
-    all_listings = Listing.query.all()
-    return render_template('listings.html', listings=all_listings)
 
 @main.route('/analysis')
 def analysis():
+    """Placeholder-pagina voor je analyse-flow."""
     return render_template('analysis.html')
