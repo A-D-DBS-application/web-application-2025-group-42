@@ -61,8 +61,7 @@ class DataInput(db.Model):
     total_investment_cost = db.Column(db.Float)
     company_id = db.Column(db.BigInteger, db.ForeignKey("company.id"), nullable=False)
     requirement_id = db.Column(db.BigInteger, db.ForeignKey("requirement.requirement_id"))
-    time_to_market_days = db.Column(db.BigInteger)
-    time_to_business_days = db.Column(db.BigInteger)
+    time_to_value = db.Column(db.BigInteger)
 
     company = db.relationship("Company", back_populates="data_inputs")
     requirement = db.relationship("Requirement", back_populates="data_inputs")

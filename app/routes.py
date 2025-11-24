@@ -1,8 +1,9 @@
 from flask import Blueprint, request, redirect, url_for, render_template, session
-from .models import db, User, Company
+from .models import db, User, Requirement, DataInput, Result
+
+
 
 main = Blueprint('main', __name__)
-
 
 @main.route('/')
 def index():
@@ -10,57 +11,23 @@ def index():
     if 'user_id' in session:
         user = User.query.get(session['user_id'])
         username = user.name
-    return render_template('index.html', username=username)
+    return render_template("index.html", username=username)
 
 
 @main.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-
-        # User info
         name = request.form.get('name')
         email = request.form.get('email')
         role = request.form.get('role')
 
-        # Company info
-        company_name = request.form.get('company_name')
-        industry = request.form.get('industry')
-        founded_date = request.form.get('founded_date')
-        description = request.form.get('description')
-        country = request.form.get('country')
-
-        # Alles verplicht behalve description
-        if not all([name, email, role, company_name, industry, founded_date, country]):
-            return render_template("register.html", error="Gelieve alle velden in te vullen.")
-
-        # Check email dubbel
-        if User.query.filter_by(email=email).first():
-            return render_template("register.html", error="Email bestaat al.")
-
-        # Stap 1: Company aanmaken
-        new_company = Company(
-            name=company_name,
-            industry=industry,
-            founded_date=founded_date,
-            description=description,
-            country=country
-        )
-        db.session.add(new_company)
-        db.session.commit()
-
-        # Stap 2: User aanmaken gelinkt aan bedrijf
-        new_user = User(
-            name=name,
-            email=email,
-            role=role,
-            company_id=new_company.id
-        )
+        new_user = User(name=name, email=email, role=role, company_id=1)
         db.session.add(new_user)
         db.session.commit()
 
         session['user_id'] = new_user.id
 
-        return redirect(url_for("main.analysis"))
+        return redirect(url_for("main.projects"))
 
     return render_template("register.html")
 
@@ -70,10 +37,13 @@ def login():
     if request.method == 'POST':
         email = request.form.get('email')
         user = User.query.filter_by(email=email).first()
+
         if not user:
             return "Geen account gevonden."
+
         session['user_id'] = user.id
-        return redirect(url_for("main.analysis"))
+        return redirect(url_for("main.projects"))
+
     return render_template("login.html")
 
 
@@ -83,6 +53,62 @@ def logout():
     return redirect(url_for("main.index"))
 
 
-@main.route('/analysis')
+@main.route('/projects')
+def projects():
+    if 'user_id' not in session:
+        return redirect(url_for("main.login"))
+
+    user = User.query.get(session['user_id'])
+    return render_template("projects.html", username=user.name)
+
+
+@main.route('/analysis', methods=['GET', 'POST'])
 def analysis():
-    return render_template("analysis.html")
+    if 'user_id' not in session:
+        return redirect(url_for("main.login"))
+
+    user = User.query.get(session['user_id'])
+
+    if request.method == 'POST':
+        project_name = request.form.get('project_name')
+        expected_profit = request.form.get('expected_profit')
+        total_cost = request.form.get('total_cost')
+        time_to_value = request.form.get('time_to_value')
+        confidence = request.form.get('confidence')
+
+        # 1️ Requirement aanmaken
+        requirement = Requirement(
+            name=project_name,
+            company_id=user.company_id,
+            created_by=user.id
+        )
+        db.session.add(requirement)
+        db.session.commit()
+
+        # 2️ DataInput aanmaken
+        data_input = DataInput(
+            category="default",
+            expected_profit=float(expected_profit),
+            total_investment_cost=float(total_cost),
+            time_to_value=int(time_to_value),
+            company_id=user.company_id,
+            requirement_id=requirement.requirement_id
+        )
+        db.session.add(data_input)
+        db.session.commit()
+
+        # 3️ Result opslaan
+        result = Result(
+            roi_percentage=0,  # kun je later berekenen
+            time_to_value_days=int(time_to_value),
+            confidence_value=float(confidence),
+            requirement_id=requirement.requirement_id,
+            data_input_id=data_input.data_input_id
+        )
+        db.session.add(result)
+        db.session.commit()
+
+        return redirect(url_for("main.projects"))
+
+    return render_template("analysis.html", username=user.name)
+
