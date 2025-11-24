@@ -16,7 +16,6 @@ class Company(db.Model):
     description = db.Column(db.Text)
     country = db.Column(db.String(255))
 
-    # relaties
     users = db.relationship("User", back_populates="company", lazy="dynamic")
     requirements = db.relationship("Requirement", back_populates="company", lazy="dynamic")
     data_inputs = db.relationship("DataInput", back_populates="company", lazy="dynamic")
@@ -31,11 +30,9 @@ class User(db.Model):
     id = db.Column(db.BigInteger, primary_key=True)
     name = db.Column(db.String(255), nullable=False)
     email = db.Column(db.String(255), unique=True, index=True, nullable=False)
-    role = db.Column(db.String(100))
-    password_hash = db.Column(db.String(255), nullable=False)
+    role = db.Column(db.String(100), nullable=True)
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
-    # kolomnaam in Supabase is "company" (zonder _id)
-    company_id = db.Column("company", db.BigInteger, db.ForeignKey("company.id"))
+    company_id = db.Column("company", db.BigInteger, db.ForeignKey("company.id"), nullable=True)
 
     company = db.relationship("Company", back_populates="users")
     requirements_created = db.relationship(
@@ -64,15 +61,14 @@ class Requirement(db.Model):
         return f"<Requirement {self.name}>"
 
 
+
 class DataInput(db.Model):
     __tablename__ = "data_input"
 
     data_input_id = db.Column(db.BigInteger, primary_key=True)
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
     analysis_id = db.Column(
-        UUID(as_uuid=True),
-        default=uuid.uuid4,
-        nullable=False
+        UUID(as_uuid=True), default=uuid.uuid4, nullable=False
     )
     category = db.Column(db.String(255))
     expected_profit = db.Column(db.Float)
