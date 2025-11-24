@@ -34,12 +34,9 @@ def register():
 
         session['user_id'] = new_user.id
 
-        # Redirect to your analysis/project form
-        return redirect(url_for('main.analysis'))  # <-- HIER aanpassen
+        return redirect(url_for('main.analysis'))
 
     return render_template('register.html')
-
-
 
 @main.route('/login', methods=['GET', 'POST'])
 def login():
@@ -56,12 +53,10 @@ def login():
 
     return render_template('login.html')
 
-
 @main.route('/logout', methods=['POST'])
 def logout():
     session.pop('user_id', None)
     return redirect(url_for('main.analysis'))
-
 
 @main.route('/add-listing', methods=['GET', 'POST'])
 def add_listing():
@@ -86,4 +81,3 @@ def listings():
 @main.route('/analysis')
 def analysis():
     return render_template('analysis.html')
-
