@@ -1,9 +1,7 @@
-from flask_sqlalchemy import SQLAlchemy
+from . import db
 from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
-
-db = SQLAlchemy()
 
 
 class Company(db.Model):
@@ -53,7 +51,7 @@ class Requirement(db.Model):
 
 
 class DataInput(db.Model):
-    __tablename__ = "data input"
+    __tablename__ = "data_input"
 
     data_input_id = db.Column(db.BigInteger, primary_key=True)
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
@@ -61,7 +59,7 @@ class DataInput(db.Model):
     category = db.Column(db.String, nullable=False, default="")
     expected_profit = db.Column(db.Float)
     total_investment_cost = db.Column(db.Float)
-    company_id = db.Column(db.BigInteger, db.ForeignKey("company.id"), nullable=False, unique=True)
+    company_id = db.Column(db.BigInteger, db.ForeignKey("company.id"), nullable=False)
     requirement_id = db.Column(db.BigInteger, db.ForeignKey("requirement.requirement_id"))
     time_to_market_days = db.Column(db.BigInteger)
     time_to_business_days = db.Column(db.BigInteger)
@@ -82,7 +80,7 @@ class Result(db.Model):
     created_at = db.Column(db.Date)
 
     requirement_id = db.Column(db.BigInteger, db.ForeignKey("requirement.requirement_id"))
-    data_input_id = db.Column(db.BigInteger, db.ForeignKey("data input.data_input_id"))
+    data_input_id = db.Column(db.BigInteger, db.ForeignKey("data_input.data_input_id"))
 
     requirement = db.relationship("Requirement", back_populates="results")
     data_input = db.relationship("DataInput", back_populates="results")

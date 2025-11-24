@@ -2,8 +2,8 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from .config import Config
-from .models import db
 
+db = SQLAlchemy()
 migrate = Migrate()
 
 def create_app():
@@ -13,8 +13,10 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
 
-    with app.app_context():
-        from .routes import main
-        app.register_blueprint(main)
+    # Modellen importeren zodat SQLAlchemy ze herkent
+    from . import models
+    from .routes import main
+
+    app.register_blueprint(main)
 
     return app
