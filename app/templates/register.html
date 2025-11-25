@@ -22,19 +22,28 @@
 
 <form method="POST">
 
-    <h2>User gegevens</h2>
-    <input type="text" name="name" placeholder="Naam" required>
+    <h2>User information</h2>
+    <input type="text" name="name" placeholder="Full Name" required>
     <input type="email" name="email" placeholder="Email" required>
-    <input type="text" name="role" placeholder="Rol (bv. CEO)" required>
 
-    <h2>Bedrijfsgegevens</h2>
-    <input type="text" name="company_name" placeholder="Bedrijfsnaam" required>
-    <input type="text" name="industry" placeholder="Industrie" required>
+    <h2>Company information</h2>
+    <input type="text" name="company_name" placeholder="Company Name" required>
+    <label for="industry">Industry</label>   
+    <select name="industry" required>        
+        <option value="" disabled selected>Select industry</option>
+        <option value="Technology">Technology</option>
+        <option value="Finance">Finance</option>
+        <option value="Healthcare">Healthcare</option>
+        <option value="Retail">Retail</option>
+        <option value="Manufacturing">Manufacturing</option>
+        <option value="Energy">Energy</option>
+        <option value="Consulting">Consulting</option>
+    </select>
     <input type="date" name="founded_date" required>
-    <textarea name="description" placeholder="Beschrijving (optioneel)" rows="3"></textarea>
-    <input type="text" name="country" placeholder="Land" required>
+    <textarea name="description" placeholder="Description (optional)" rows="3"></textarea>
+    <input type="text" name="country" placeholder="Country" required>
 
-    <button type="submit">Account aanmaken</button>
+    <button type="submit">Create account</button>
 </form>
 
 </body>

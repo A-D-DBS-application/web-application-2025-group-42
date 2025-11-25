@@ -89,8 +89,17 @@
                 <h2 class="step-title text-center">Confidence</h2>
 
                 <div class="mb-3">
-                    <label class="form-label">Confidence (%)</label>
-                    <input type="number" min="0" max="100" name="confidence" class="form-control" required>
+                    <label class="form-label">Confidence Level</label>
+                    <select name="confidence" class="form-control" required>
+                        <option value="" disabled selected>Select confidence</option>
+                        <option value="1">Near Zero</option>
+                        <option value="5">Very Low</option>
+                        <option value="10">Low</option>
+                        <option value="20">Med-Low</option>
+                        <option value="40">Medium</option>
+                        <option value="70">High</option>
+                        <option value="90">Very High</option>
+                    </select>
                 </div>
 
                 <button type="button" class="btn btn-secondary w-100 mb-2" onclick="nextStep(3)">Back</button>
