@@ -195,4 +195,3 @@ def edit_project(project_id):
                            requirement=requirement,
                            data_input=data_input,
                            result=result)
-
