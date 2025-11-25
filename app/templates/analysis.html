@@ -50,7 +50,8 @@
                     <input type="text" name="project_name" class="form-control" required>
                 </div>
 
-                <button type="button" class="btn btn-primary w-100" onclick="nextStep(2)">Next</button>
+                <!-- NEXT bovenaan -->
+                <button type="button" class="btn btn-primary w-100 mb-2" onclick="nextStep(2)">Next</button>
             </div>
 
             <!-- STEP 2 -->
@@ -67,8 +68,9 @@
                     <input type="number" step="0.01" name="total_cost" class="form-control" required>
                 </div>
 
-                <button type="button" class="btn btn-secondary w-100 mb-2" onclick="nextStep(1)">Back</button>
-                <button type="button" class="btn btn-primary w-100" onclick="nextStep(3)">Next</button>
+                <!-- NEXT bovenaan, BACK eronder + wit -->
+                <button type="button" class="btn btn-primary w-100 mb-2" onclick="nextStep(3)">Next</button>
+                <button type="button" class="btn btn-outline-secondary w-100" onclick="nextStep(1)">Back</button>
             </div>
 
             <!-- STEP 3 -->
@@ -80,8 +82,9 @@
                     <input type="number" name="time_to_value" class="form-control" required>
                 </div>
 
-                <button type="button" class="btn btn-secondary w-100 mb-2" onclick="nextStep(2)">Back</button>
-                <button type="button" class="btn btn-primary w-100" onclick="nextStep(4)">Next</button>
+                <!-- NEXT bovenaan -->
+                <button type="button" class="btn btn-primary w-100 mb-2" onclick="nextStep(4)">Next</button>
+                <button type="button" class="btn btn-outline-secondary w-100" onclick="nextStep(2)">Back</button>
             </div>
 
             <!-- STEP 4 -->
@@ -102,8 +105,9 @@
                     </select>
                 </div>
 
-                <button type="button" class="btn btn-secondary w-100 mb-2" onclick="nextStep(3)">Back</button>
-                <button type="submit" class="btn btn-success w-100">Save Analysis</button>
+                <!-- SUBMIT bovenaan -->
+                <button type="submit" class="btn btn-success w-100 mb-2">Save Analysis</button>
+                <button type="button" class="btn btn-outline-secondary w-100" onclick="nextStep(3)">Back</button>
             </div>
 
         </form>
