@@ -1,8 +1,6 @@
 from flask import Blueprint, request, redirect, url_for, render_template, session
 from .models import db, User, Requirement, DataInput, Result
 
-
-
 main = Blueprint('main', __name__)
 
 @main.route('/')
@@ -81,6 +79,55 @@ def projects():
     return render_template("projects.html", username=user.name, project_data=project_data)
 
 
+
+
+@main.route('/analysis', methods=['GET', 'POST'])
+def analysis():
+    if 'user_id' not in session:
+        return redirect(url_for("main.login"))
+
+    user = User.query.get(session['user_id'])
+
+    if request.method == 'POST':
+        project_name = request.form.get('project_name')
+        expected_profit = float(request.form.get('expected_profit'))
+        total_cost = float(request.form.get('total_cost'))
+        time_to_value = int(request.form.get('time_to_value'))
+        confidence = float(request.form.get('confidence'))
+
+        requirement = Requirement(
+            name=project_name,
+            company_id=user.company_id,
+            created_by=user.id
+        )
+        db.session.add(requirement)
+        db.session.commit()
+
+        data_input = DataInput(
+            category="default",
+            expected_profit=expected_profit,
+            total_investment_cost=total_cost,
+            time_to_value=time_to_value,
+            company_id=user.company_id,
+            requirement_id=requirement.requirement_id
+        )
+        db.session.add(data_input)
+        db.session.commit()
+
+        result = Result(
+            roi_percentage=0,
+            time_to_value_days=time_to_value,
+            confidence_value=confidence,
+            requirement_id=requirement.requirement_id,
+            data_input_id=data_input.data_input_id
+        )
+        db.session.add(result)
+        db.session.commit()
+
+        return redirect(url_for("main.projects"))
+
+    return render_template("analysis.html", username=user.name)
+
 @main.route('/edit/<int:project_id>', methods=['GET', 'POST'])
 def edit_project(project_id):
     if 'user_id' not in session:
@@ -107,57 +154,3 @@ def edit_project(project_id):
                            requirement=requirement,
                            data_input=data_input,
                            result=result)
-
-
-
-
-@main.route('/analysis', methods=['GET', 'POST'])
-def analysis():
-    if 'user_id' not in session:
-        return redirect(url_for("main.login"))
-
-    user = User.query.get(session['user_id'])
-
-    if request.method == 'POST':
-        project_name = request.form.get('project_name')
-        expected_profit = request.form.get('expected_profit')
-        total_cost = request.form.get('total_cost')
-        time_to_value = request.form.get('time_to_value')
-        confidence = request.form.get('confidence')
-
-        # 1️ Requirement aanmaken
-        requirement = Requirement(
-            name=project_name,
-            company_id=user.company_id,
-            created_by=user.id
-        )
-        db.session.add(requirement)
-        db.session.commit()
-
-        # 2️ DataInput aanmaken
-        data_input = DataInput(
-            category="default",
-            expected_profit=float(expected_profit),
-            total_investment_cost=float(total_cost),
-            time_to_value=int(time_to_value),
-            company_id=user.company_id,
-            requirement_id=requirement.requirement_id
-        )
-        db.session.add(data_input)
-        db.session.commit()
-
-        # 3️ Result opslaan
-        result = Result(
-            roi_percentage=0,  # kun je later berekenen
-            time_to_value_days=int(time_to_value),
-            confidence_value=float(confidence),
-            requirement_id=requirement.requirement_id,
-            data_input_id=data_input.data_input_id
-        )
-        db.session.add(result)
-        db.session.commit()
-
-        return redirect(url_for("main.projects"))
-
-    return render_template("analysis.html", username=user.name)
-

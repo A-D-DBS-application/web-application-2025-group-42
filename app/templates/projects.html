@@ -35,19 +35,6 @@
             padding: 10px 30px;
             font-size: 1.2rem;
         }
-        #chartjs-custom-tooltip {
-            position: absolute;
-            background: white;
-            border: 2px solid #0d6efd;
-            border-radius: 8px;
-            padding: 10px;
-            font-size: 14px;
-            pointer-events: auto; /* BELANGRIJK voor klikbaarheid */
-            z-index: 9999;
-            box-shadow: 0px 2px 8px rgba(0,0,0,0.15);
-            opacity: 0;
-            transition: opacity 0.1s ease;
-        }
     </style>
 </head>
 
@@ -58,6 +45,7 @@
 <div class="container">
 
     {% if project_data|length == 0 %}
+    <!-- GEEN PROJECTEN -->
     <div class="text-center" style="margin-top: 80px;">
         <h1 class="fw-bold">Your Projects</h1>
         <p class="text-secondary">Add and manage all your analyses.</p>
@@ -68,21 +56,25 @@
     </div>
 
     {% else %}
+    <!-- WEL PROJECTEN -->
     <h1 class="fw-bold mt-4">Your Projects</h1>
     <p class="text-secondary">Overview of your project analyses.</p>
 
+    <!-- ADD NEW PROJECT BUTTON -->
     <div class="text-center mt-3 mb-4">
         <a href="{{ url_for('main.analysis') }}" class="btn btn-primary new-project-btn">
             + Add New Project
         </a>
     </div>
 
+    <!-- GECENTREERDE GRAFIEK -->
     <div class="d-flex justify-content-center mt-4">
         <div class="box" style="width: 600px;">
             <canvas id="projectChart" height="120"></canvas>
         </div>
     </div>
 
+    <!-- TABEL DIRECT ONDER GRAFIEK -->
     <hr style="border-color: #0d6efd; margin: 25px 0;">
 
     <table class="table table-hover">
@@ -111,91 +103,49 @@
     </table>
 
     {% endif %}
-</div>
 
-<div id="chartjs-custom-tooltip"></div>
+</div>
 
 <footer class="text-center mt-5 text-secondary">
     © 2025 VECTR. All rights reserved.
 </footer>
 
 <script>
-{% if project_data|length > 0 %}
+    {% if project_data|length > 0 %}
+    const ctx = document.getElementById('projectChart').getContext('2d');
 
-const projectData = [
-    {% for p in project_data %}
-    {
-        id: {{ p.project_id }},
-        name: "{{ p.name }}",
-        confidence: {{ p.confidence }},
-        time_to_value: {{ p.time_to_value }}
-    },
-    {% endfor %}
-];
-
-const ctx = document.getElementById('projectChart').getContext('2d');
-
-new Chart(ctx, {
-    type: 'scatter',
-    data: {
-        datasets: [{
-            label: 'Project Data',
-            data: projectData.map(p => ({ x: p.confidence, y: p.time_to_value })),
-            pointRadius: 6,
-            borderColor: '#4ea3ff',
-            backgroundColor: '#4ea3ff'
-        }]
-    },
-    options: {
-        plugins: {
-            tooltip: {
-                enabled: false,
-                external: function(context) {
-
-                    const tooltipEl = document.getElementById('chartjs-custom-tooltip');
-                    const tooltipModel = context.tooltip;
-
-                    // Tooltip sluiten, MAAR niet wanneer muis op tooltip staat
-                    if (tooltipModel.opacity === 0 && !tooltipEl.matches(':hover')) {
-                        tooltipEl.style.opacity = 0;
-                        return;
-                    }
-
-                    const index = tooltipModel.dataPoints[0].dataIndex;
-                    const p = projectData[index];
-
-                    tooltipEl.innerHTML = `
-                        <strong>${p.name}</strong><br>
-                        Confidence: ${p.confidence}<br>
-                        Time to Value: ${p.time_to_value}<br><br>
-                        <a href="/edit/${p.id}" class="btn btn-primary btn-sm">Edit</a>
-                    `;
-
-                    const rect = context.chart.canvas.getBoundingClientRect();
-
-                    tooltipEl.style.opacity = 1;
-                    tooltipEl.style.left = rect.left + window.pageXOffset + tooltipModel.caretX + 20 + "px";
-                    tooltipEl.style.top = rect.top + window.pageYOffset + tooltipModel.caretY + 20 + "px";
+    new Chart(ctx, {
+        type: 'scatter',
+        data: {
+            datasets: [{
+                label: 'Project Data',
+                data: [
+                    {% for p in project_data %}
+                        { x: {{ p.confidence }}, y: {{ p.time_to_value }} },
+                    {% endfor %}
+                ],
+                pointRadius: 6,
+                borderColor: '#4ea3ff',
+                backgroundColor: '#4ea3ff'
+            }]
+        },
+        options: {
+            scales: {
+                x: {
+                    min: 0,
+                    max: 100,
+                    title: { display: true, text: 'Confidence Level', color: '#0d6efd' },
+                    ticks: { color: '#0d6efd' }
+                },
+                y: {
+                    min: 0,
+                    title: { display: true, text: 'Time to Value', color: '#0d6efd' },
+                    ticks: { color: '#0d6efd' }
                 }
             }
-        },
-        scales: {
-            x: {
-                min: 0,
-                max: 100,
-                title: { display: true, text: 'Confidence Level', color: '#0d6efd' },
-                ticks: { color: '#0d6efd' }
-            },
-            y: {
-                min: 0,
-                title: { display: true, text: 'Time to Value', color: '#0d6efd' },
-                ticks: { color: '#0d6efd' }
-            }
         }
-    }
-});
-
-{% endif %}
+    });
+    {% endif %}
 </script>
 
 </body>
