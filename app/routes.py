@@ -18,7 +18,6 @@ def index():
 
 # -----------------------
 # REGISTER
-# (role bestaat niet meer → dus NIET meenemen)
 # -----------------------
 @main.route('/register', methods=['GET', 'POST'])
 def register():
@@ -26,11 +25,10 @@ def register():
         name = request.form.get('name')
         email = request.form.get('email')
 
-        # USER TABEL heeft alleen name, email, company
         new_user = User(
             name=name,
             email=email,
-            company_id=1  # voorlopig vaste company
+            company_id=1
         )
 
         db.session.add(new_user)
@@ -79,7 +77,6 @@ def projects():
 
     user = User.query.get(session['user_id'])
 
-    # Haal enkel eigen projecten op
     requirements = Requirement.query.filter_by(created_by=user.id).all()
 
     project_data = []
@@ -114,8 +111,27 @@ def analysis():
         project_name = request.form.get('project_name')
         expected_profit = float(request.form.get('expected_profit'))
         total_cost = float(request.form.get('total_cost'))
-        time_to_value = int(request.form.get('time_to_value'))
         confidence = float(request.form.get('confidence'))
+
+        # ---- NIEUW: 6 SCORE-VRAGEN ----
+        q1 = int(request.form.get('q1_type_product'))
+        q2 = int(request.form.get('q2_complexiteit'))
+        q3 = int(request.form.get('q3_teams'))
+        q4 = int(request.form.get('q4_sector'))
+        q5 = int(request.form.get('q5_data'))
+        q6 = int(request.form.get('q6_extern'))
+
+        total_score = q1 + q2 + q3 + q4 + q5 + q6
+
+        # ---- Zone bepalen ----
+        if total_score <= 8: zone = 1
+        elif total_score <= 11: zone = 2
+        elif total_score <= 14: zone = 3
+        elif total_score <= 17: zone = 4
+        elif total_score <= 20: zone = 5
+        elif total_score <= 23: zone = 6
+        elif total_score <= 26: zone = 7
+        else: zone = 8
 
         # Requirement maken
         requirement = Requirement(
@@ -131,7 +147,7 @@ def analysis():
             category="default",
             expected_profit=expected_profit,
             total_investment_cost=total_cost,
-            time_to_value=time_to_value,
+            time_to_value=zone,  # <-- OPGESLAGEN ZONE!
             company_id=user.company_id,
             requirement_id=requirement.requirement_id
         )
@@ -141,7 +157,7 @@ def analysis():
         # Result maken
         result = Result(
             roi_percentage=0,
-            time_to_value_days=time_to_value,
+            time_to_value_days=zone,   # <-- Zelfde zone opslaan
             confidence_value=confidence,
             requirement_id=requirement.requirement_id,
             data_input_id=data_input.data_input_id
@@ -170,7 +186,6 @@ def edit_project(project_id):
         requirement.name = request.form.get('project_name')
         data_input.expected_profit = float(request.form.get('expected_profit'))
         data_input.total_investment_cost = float(request.form.get('total_cost'))
-        data_input.time_to_value = int(request.form.get('time_to_value'))
         result.confidence_value = float(request.form.get('confidence'))
 
         db.session.commit()

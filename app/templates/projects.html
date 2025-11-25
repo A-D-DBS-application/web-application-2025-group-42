@@ -111,7 +111,7 @@
 </footer>
 
 <script>
-    {% if project_data|length > 0 %}
+{% if project_data|length > 0 %}
     const ctx = document.getElementById('projectChart').getContext('2d');
 
     new Chart(ctx, {
@@ -121,7 +121,7 @@
                 label: 'Project Data',
                 data: [
                     {% for p in project_data %}
-                        { x: {{ p.confidence }}, y: {{ p.time_to_value }} },
+                        { x: {{ p.confidence or 0 }}, y: {{ p.time_to_value or 0 }} },
                     {% endfor %}
                 ],
                 pointRadius: 6,
@@ -134,18 +134,39 @@
                 x: {
                     min: 0,
                     max: 100,
-                    title: { display: true, text: 'Confidence Level', color: '#0d6efd' },
-                    ticks: { color: '#0d6efd' }
+                    title: {
+                        display: true,
+                        text: 'Confidence Level',
+                        color: '#0d6efd'
+                    },
+                    ticks: {
+                        color: '#0d6efd',
+                        callback: function(value, index, ticks) {
+                            if (index === 0) return 'Low';
+                            if (index === ticks.length - 1) return 'High';
+                            return '';
+                        }
+                    }
                 },
                 y: {
-                    min: 0,
-                    title: { display: true, text: 'Time to Value', color: '#0d6efd' },
-                    ticks: { color: '#0d6efd' }
+                    title: {
+                        display: true,
+                        text: 'Time to Value',
+                        color: '#0d6efd'
+                    },
+                    ticks: {
+                        color: '#0d6efd',
+                        callback: function(value, index, ticks) {
+                            if (index === 0) return 'Slow';
+                            if (index === ticks.length - 1) return 'Fast';
+                            return '';
+                        }
+                    }
                 }
             }
         }
     });
-    {% endif %}
+{% endif %}
 </script>
 
 </body>

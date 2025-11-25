@@ -50,7 +50,6 @@
                     <input type="text" name="project_name" class="form-control" required>
                 </div>
 
-                <!-- NEXT bovenaan -->
                 <button type="button" class="btn btn-primary w-100 mb-2" onclick="nextStep(2)">Next</button>
             </div>
 
@@ -68,21 +67,96 @@
                     <input type="number" step="0.01" name="total_cost" class="form-control" required>
                 </div>
 
-                <!-- NEXT bovenaan, BACK eronder + wit -->
                 <button type="button" class="btn btn-primary w-100 mb-2" onclick="nextStep(3)">Next</button>
                 <button type="button" class="btn btn-outline-secondary w-100" onclick="nextStep(1)">Back</button>
             </div>
 
-            <!-- STEP 3 -->
+            <!-- STEP 3 (REPLACED WITH 6 DROPDOWNS) -->
             <div class="step" id="step3">
-                <h2 class="step-title text-center">Time to Value</h2>
+                <h2 class="step-title text-center">Time to Value Assessment</h2>
 
+                <!-- VRAAG 1 -->
                 <div class="mb-3">
-                    <label class="form-label">Time to Value (days)</label>
-                    <input type="number" name="time_to_value" class="form-control" required>
+                    <label class="form-label">Type product</label>
+                    <select name="q1_type_product" class="form-control" required>
+                        <option value="" disabled selected>Select...</option>
+                        <option value="1">UI-tool / dashboard</option>
+                        <option value="2">Kleine automatisatie</option>
+                        <option value="3">Integratie tussen 2 systemen</option>
+                        <option value="3">Grotere automatisatie / workflow</option>
+                        <option value="4">Nieuwe interne software</option>
+                        <option value="5">AI / Machine Learning</option>
+                        <option value="5">Hardware / IoT</option>
+                    </select>
                 </div>
 
-                <!-- NEXT bovenaan -->
+                <!-- VRAAG 2 -->
+                <div class="mb-3">
+                    <label class="form-label">Complexiteit van het project</label>
+                    <select name="q2_complexiteit" class="form-control" required>
+                        <option value="" disabled selected>Select...</option>
+                        <option value="1">Heel eenvoudig</option>
+                        <option value="2">Eenvoudig</option>
+                        <option value="3">Gemiddeld</option>
+                        <option value="4">Complex</option>
+                        <option value="5">Zeer complex</option>
+                    </select>
+                </div>
+
+                <!-- VRAAG 3 -->
+                <div class="mb-3">
+                    <label class="form-label">Hoeveel teams zullen hiermee werken?</label>
+                    <select name="q3_teams" class="form-control" required>
+                        <option value="" disabled selected>Select...</option>
+                        <option value="1">1 team</option>
+                        <option value="2">2 teams</option>
+                        <option value="3">3 teams</option>
+                        <option value="4">4 teams</option>
+                        <option value="5">Meer dan 4 teams</option>
+                    </select>
+                </div>
+
+                <!-- VRAAG 4 -->
+                <div class="mb-3">
+                    <label class="form-label">Sector</label>
+                    <select name="q4_sector" class="form-control" required>
+                        <option value="" disabled selected>Select...</option>
+                        <option value="1">SaaS / Tech</option>
+                        <option value="2">Retail</option>
+                        <option value="2">Logistiek</option>
+                        <option value="3">Finance & Insurance</option>
+                        <option value="3">Industrie</option>
+                        <option value="4">Energie</option>
+                        <option value="4">Healthcare</option>
+                        <option value="5">Overheid</option>
+                    </select>
+                </div>
+
+                <!-- VRAAG 5 -->
+                <div class="mb-3">
+                    <label class="form-label">Is de nodige data al beschikbaar?</label>
+                    <select name="q5_data" class="form-control" required>
+                        <option value="" disabled selected>Select...</option>
+                        <option value="1">Ja, alle data is beschikbaar</option>
+                        <option value="2">De meeste data is beschikbaar</option>
+                        <option value="3">Een deel van de data ontbreekt</option>
+                        <option value="4">Veel data ontbreekt</option>
+                        <option value="5">Data moet nog verzameld worden</option>
+                    </select>
+                </div>
+
+                <!-- VRAAG 6 -->
+                <div class="mb-3">
+                    <label class="form-label">Zijn er externe afhankelijkheden?</label>
+                    <select name="q6_extern" class="form-control" required>
+                        <option value="" disabled selected>Select...</option>
+                        <option value="1">Geen externe afhankelijkheden</option>
+                        <option value="3">Eén externe partij</option>
+                        <option value="4">Twee externe partijen</option>
+                        <option value="5">Meer dan twee externe partijen</option>
+                    </select>
+                </div>
+
                 <button type="button" class="btn btn-primary w-100 mb-2" onclick="nextStep(4)">Next</button>
                 <button type="button" class="btn btn-outline-secondary w-100" onclick="nextStep(2)">Back</button>
             </div>
@@ -105,7 +179,6 @@
                     </select>
                 </div>
 
-                <!-- SUBMIT bovenaan -->
                 <button type="submit" class="btn btn-success w-100 mb-2">Save Analysis</button>
                 <button type="button" class="btn btn-outline-secondary w-100" onclick="nextStep(3)">Back</button>
             </div>
