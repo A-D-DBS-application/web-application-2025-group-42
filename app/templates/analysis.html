@@ -19,6 +19,17 @@
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
+        .step-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .step {
+            display: none;
+        }
+        .step.active {
+            display: block;
+        }
     </style>
 </head>
 
@@ -28,37 +39,64 @@
 
 <div class="container">
     <div class="form-box">
-        <h2 class="fw-bold mb-4 text-center">New Project Analysis</h2>
+        <form method="post" id="analysisForm">
 
-        <form method="post">
-            <div class="mb-3">
-                <label class="form-label">Project Name</label>
-                <input type="text" name="project_name" class="form-control" required>
+            <!-- STEP 1 -->
+            <div class="step active" id="step1">
+                <h2 class="step-title text-center">Project Name</h2>
+
+                <div class="mb-3">
+                    <label class="form-label">Project Name</label>
+                    <input type="text" name="project_name" class="form-control" required>
+                </div>
+
+                <button type="button" class="btn btn-primary w-100" onclick="nextStep(2)">Next</button>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">Expected Profit (€)</label>
-                <input type="number" step="0.01" name="expected_profit" class="form-control" required>
+            <!-- STEP 2 -->
+            <div class="step" id="step2">
+                <h2 class="step-title text-center">ROI Inputs</h2>
+
+                <div class="mb-3">
+                    <label class="form-label">Expected Profit (€)</label>
+                    <input type="number" step="0.01" name="expected_profit" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Total Investment Cost (€)</label>
+                    <input type="number" step="0.01" name="total_cost" class="form-control" required>
+                </div>
+
+                <button type="button" class="btn btn-secondary w-100 mb-2" onclick="nextStep(1)">Back</button>
+                <button type="button" class="btn btn-primary w-100" onclick="nextStep(3)">Next</button>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">Total Investment Cost (€)</label>
-                <input type="number" step="0.01" name="total_cost" class="form-control" required>
+            <!-- STEP 3 -->
+            <div class="step" id="step3">
+                <h2 class="step-title text-center">Time to Value</h2>
+
+                <div class="mb-3">
+                    <label class="form-label">Time to Value (days)</label>
+                    <input type="number" name="time_to_value" class="form-control" required>
+                </div>
+
+                <button type="button" class="btn btn-secondary w-100 mb-2" onclick="nextStep(2)">Back</button>
+                <button type="button" class="btn btn-primary w-100" onclick="nextStep(4)">Next</button>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">Time to Value (days)</label>
-                <input type="number" name="time_to_value" class="form-control" required>
+            <!-- STEP 4 -->
+            <div class="step" id="step4">
+                <h2 class="step-title text-center">Confidence</h2>
+
+                <div class="mb-3">
+                    <label class="form-label">Confidence (%)</label>
+                    <input type="number" min="0" max="100" name="confidence" class="form-control" required>
+                </div>
+
+                <button type="button" class="btn btn-secondary w-100 mb-2" onclick="nextStep(3)">Back</button>
+                <button type="submit" class="btn btn-success w-100">Save Analysis</button>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">Confidence (%)</label>
-                <input type="number" min="0" max="100" name="confidence" class="form-control" required>
-            </div>
-
-            <button type="submit" class="btn btn-primary w-100 mt-3">
-                Save Analysis
-            </button>
         </form>
     </div>
 </div>
@@ -66,6 +104,14 @@
 <footer class="text-center mt-5 text-secondary">
     © 2025 VECTR. All rights reserved.
 </footer>
+
+<script>
+    function nextStep(stepNumber) {
+        document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+        document.getElementById('step' + stepNumber).classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+</script>
 
 </body>
 </html>
