@@ -59,7 +59,56 @@ def projects():
         return redirect(url_for("main.login"))
 
     user = User.query.get(session['user_id'])
-    return render_template("projects.html", username=user.name)
+
+    # Enkel projecten van deze user ophalen
+    requirements = Requirement.query.filter_by(created_by=user.id).all()
+
+    project_data = []
+    for r in requirements:
+        data_input = DataInput.query.filter_by(requirement_id=r.requirement_id).first()
+        result = Result.query.filter_by(requirement_id=r.requirement_id).first()
+
+        project_data.append({
+            "project_id": r.requirement_id,   # <-- NODIG VOOR EDIT
+            "name": r.name,
+            "expected_profit": data_input.expected_profit if data_input else None,
+            "total_cost": data_input.total_investment_cost if data_input else None,
+            "time_to_value": data_input.time_to_value if data_input else None,
+            "confidence": result.confidence_value if result else None,
+            "roi": result.roi_percentage if result else None
+        })
+
+    return render_template("projects.html", username=user.name, project_data=project_data)
+
+
+@main.route('/edit/<int:project_id>', methods=['GET', 'POST'])
+def edit_project(project_id):
+    if 'user_id' not in session:
+        return redirect(url_for("main.login"))
+
+    user = User.query.get(session['user_id'])
+
+    requirement = Requirement.query.get(project_id)
+    data_input = DataInput.query.filter_by(requirement_id=project_id).first()
+    result = Result.query.filter_by(requirement_id=project_id).first()
+
+    if request.method == 'POST':
+        # update values
+        requirement.name = request.form.get('project_name')
+        data_input.expected_profit = float(request.form.get('expected_profit'))
+        data_input.total_investment_cost = float(request.form.get('total_cost'))
+        data_input.time_to_value = int(request.form.get('time_to_value'))
+        result.confidence_value = float(request.form.get('confidence'))
+
+        db.session.commit()
+        return redirect(url_for("main.projects"))
+
+    return render_template("edit_project.html",
+                           requirement=requirement,
+                           data_input=data_input,
+                           result=result)
+
+
 
 
 @main.route('/analysis', methods=['GET', 'POST'])
