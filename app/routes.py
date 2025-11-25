@@ -108,12 +108,26 @@ def analysis():
     user = User.query.get(session['user_id'])
 
     if request.method == 'POST':
-        project_name = request.form.get('project_name')
-        expected_profit = float(request.form.get('expected_profit'))
-        total_cost = float(request.form.get('total_cost'))
-        confidence = float(request.form.get('confidence'))
 
-        # ---- NIEUW: 6 SCORE-VRAGEN ----
+        # ------------------------
+        # FORM DATA
+        # ------------------------
+        project_name = request.form.get('project_name')
+
+        # ROI COST INPUTS
+        days_required = float(request.form.get('days_required'))
+        hours_per_day = float(request.form.get('hours_per_day'))
+        internal_hourly_cost = float(request.form.get('internal_hourly_cost'))
+        external_costs = float(request.form.get('external_costs'))
+        one_time_costs = float(request.form.get('one_time_costs'))
+
+        # ROI PROFIT INPUTS
+        hours_saved_per_month = float(request.form.get('hours_saved_per_month'))
+        extra_revenue_per_month = float(request.form.get('extra_revenue_per_month'))
+        profit_margin_percent = float(request.form.get('profit_margin_percent'))
+        horizon_months = float(request.form.get('horizon_months'))
+
+        # TIME TO VALUE QUESTIONS
         q1 = int(request.form.get('q1_type_product'))
         q2 = int(request.form.get('q2_complexiteit'))
         q3 = int(request.form.get('q3_teams'))
@@ -121,9 +135,13 @@ def analysis():
         q5 = int(request.form.get('q5_data'))
         q6 = int(request.form.get('q6_extern'))
 
+        confidence = float(request.form.get('confidence'))
+
+        # ------------------------
+        # TIME TO VALUE ZONE BEREKENEN
+        # ------------------------
         total_score = q1 + q2 + q3 + q4 + q5 + q6
 
-        # ---- Zone bepalen ----
         if total_score <= 8: zone = 1
         elif total_score <= 11: zone = 2
         elif total_score <= 14: zone = 3
@@ -133,7 +151,25 @@ def analysis():
         elif total_score <= 26: zone = 7
         else: zone = 8
 
-        # Requirement maken
+        # ------------------------
+        # ROI BEREKENEN
+        # ------------------------
+
+        # Totale kost
+        internal_cost = days_required * hours_per_day * internal_hourly_cost
+        total_cost = internal_cost + external_costs + one_time_costs
+
+        # Expected profit (enkel omzetwinst, tijdsbesparing niet meegerekend)
+        expected_profit = (
+            extra_revenue_per_month * (profit_margin_percent / 100)
+        ) * horizon_months
+
+        # ROI percentage
+        roi_percentage = (expected_profit / total_cost) * 100 if total_cost > 0 else 0
+
+        # ------------------------
+        # REQUIREMENT OPSLAAN
+        # ------------------------
         requirement = Requirement(
             name=project_name,
             company_id=user.company_id,
@@ -142,22 +178,26 @@ def analysis():
         db.session.add(requirement)
         db.session.commit()
 
-        # DataInput maken
+        # ------------------------
+        # DATA INPUT OPSLAAN
+        # ------------------------
         data_input = DataInput(
             category="default",
             expected_profit=expected_profit,
             total_investment_cost=total_cost,
-            time_to_value=zone,  # <-- OPGESLAGEN ZONE!
+            time_to_value=zone,
             company_id=user.company_id,
             requirement_id=requirement.requirement_id
         )
         db.session.add(data_input)
         db.session.commit()
 
-        # Result maken
+        # ------------------------
+        # RESULT (ROI) OPSLAAN
+        # ------------------------
         result = Result(
-            roi_percentage=0,
-            time_to_value_days=zone,   # <-- Zelfde zone opslaan
+            roi_percentage=roi_percentage,
+            time_to_value_days=zone,
             confidence_value=confidence,
             requirement_id=requirement.requirement_id,
             data_input_id=data_input.data_input_id
@@ -184,8 +224,6 @@ def edit_project(project_id):
 
     if request.method == 'POST':
         requirement.name = request.form.get('project_name')
-        data_input.expected_profit = float(request.form.get('expected_profit'))
-        data_input.total_investment_cost = float(request.form.get('total_cost'))
         result.confidence_value = float(request.form.get('confidence'))
 
         db.session.commit()
