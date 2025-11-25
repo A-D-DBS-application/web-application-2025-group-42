@@ -3,6 +3,10 @@ from .models import db, User, Requirement, DataInput, Result
 
 main = Blueprint('main', __name__)
 
+
+# -----------------------
+# INDEX
+# -----------------------
 @main.route('/')
 def index():
     username = None
@@ -12,24 +16,35 @@ def index():
     return render_template("index.html", username=username)
 
 
+# -----------------------
+# REGISTER
+# (role bestaat niet meer → dus NIET meenemen)
+# -----------------------
 @main.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         name = request.form.get('name')
         email = request.form.get('email')
-        role = request.form.get('role')
 
-        new_user = User(name=name, email=email, role=role, company_id=1)
+        # USER TABEL heeft alleen name, email, company
+        new_user = User(
+            name=name,
+            email=email,
+            company_id=1  # voorlopig vaste company
+        )
+
         db.session.add(new_user)
         db.session.commit()
 
         session['user_id'] = new_user.id
-
         return redirect(url_for("main.projects"))
 
     return render_template("register.html")
 
 
+# -----------------------
+# LOGIN
+# -----------------------
 @main.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -45,12 +60,18 @@ def login():
     return render_template("login.html")
 
 
+# -----------------------
+# LOGOUT
+# -----------------------
 @main.route('/logout', methods=['POST'])
 def logout():
     session.pop('user_id', None)
     return redirect(url_for("main.index"))
 
 
+# -----------------------
+# PROJECT OVERVIEW PAGE
+# -----------------------
 @main.route('/projects')
 def projects():
     if 'user_id' not in session:
@@ -58,7 +79,7 @@ def projects():
 
     user = User.query.get(session['user_id'])
 
-    # Enkel projecten van deze user ophalen
+    # Haal enkel eigen projecten op
     requirements = Requirement.query.filter_by(created_by=user.id).all()
 
     project_data = []
@@ -67,7 +88,7 @@ def projects():
         result = Result.query.filter_by(requirement_id=r.requirement_id).first()
 
         project_data.append({
-            "project_id": r.requirement_id,   # <-- NODIG VOOR EDIT
+            "project_id": r.requirement_id,
             "name": r.name,
             "expected_profit": data_input.expected_profit if data_input else None,
             "total_cost": data_input.total_investment_cost if data_input else None,
@@ -79,8 +100,9 @@ def projects():
     return render_template("projects.html", username=user.name, project_data=project_data)
 
 
-
-
+# -----------------------
+# ANALYSIS (PROJECT AANMAKEN)
+# -----------------------
 @main.route('/analysis', methods=['GET', 'POST'])
 def analysis():
     if 'user_id' not in session:
@@ -95,6 +117,7 @@ def analysis():
         time_to_value = int(request.form.get('time_to_value'))
         confidence = float(request.form.get('confidence'))
 
+        # Requirement maken
         requirement = Requirement(
             name=project_name,
             company_id=user.company_id,
@@ -103,6 +126,7 @@ def analysis():
         db.session.add(requirement)
         db.session.commit()
 
+        # DataInput maken
         data_input = DataInput(
             category="default",
             expected_profit=expected_profit,
@@ -114,6 +138,7 @@ def analysis():
         db.session.add(data_input)
         db.session.commit()
 
+        # Result maken
         result = Result(
             roi_percentage=0,
             time_to_value_days=time_to_value,
@@ -128,19 +153,20 @@ def analysis():
 
     return render_template("analysis.html", username=user.name)
 
+
+# -----------------------
+# EDIT PROJECT
+# -----------------------
 @main.route('/edit/<int:project_id>', methods=['GET', 'POST'])
 def edit_project(project_id):
     if 'user_id' not in session:
         return redirect(url_for("main.login"))
-
-    user = User.query.get(session['user_id'])
 
     requirement = Requirement.query.get(project_id)
     data_input = DataInput.query.filter_by(requirement_id=project_id).first()
     result = Result.query.filter_by(requirement_id=project_id).first()
 
     if request.method == 'POST':
-        # update values
         requirement.name = request.form.get('project_name')
         data_input.expected_profit = float(request.form.get('expected_profit'))
         data_input.total_investment_cost = float(request.form.get('total_cost'))
@@ -154,3 +180,4 @@ def edit_project(project_id):
                            requirement=requirement,
                            data_input=data_input,
                            result=result)
+

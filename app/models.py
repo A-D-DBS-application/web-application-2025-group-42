@@ -17,6 +17,7 @@ class Company(db.Model):
     description = db.Column(db.Text)
     country = db.Column(db.String, nullable=False)
 
+    # Relationships
     users = db.relationship("User", back_populates="company", lazy="dynamic")
     requirements = db.relationship("Requirement", back_populates="company", lazy="dynamic")
     data_inputs = db.relationship("DataInput", back_populates="company", lazy="dynamic")
@@ -31,18 +32,18 @@ class User(db.Model):
     id = db.Column(db.BigInteger, primary_key=True)
     name = db.Column(db.String, nullable=False)
     email = db.Column(db.String, nullable=False)
-    role = db.Column(db.String, nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
 
-    # Supabase FK = column "company"
+    # Foreign key name is "company"
     company_id = db.Column("company", db.BigInteger, db.ForeignKey("company.id"), nullable=False)
 
+    # Relationship
     company = db.relationship("Company", back_populates="users")
     requirements_created = db.relationship("Requirement", back_populates="created_by_user", lazy="dynamic")
 
 
 # -----------------------
-# REQUIREMENT (PROJECT)
+# REQUIREMENT  (PROJECT)
 # -----------------------
 class Requirement(db.Model):
     __tablename__ = "requirement"
@@ -53,6 +54,7 @@ class Requirement(db.Model):
     created_by = db.Column(db.BigInteger, db.ForeignKey("user.id"))
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
 
+    # Relationships
     company = db.relationship("Company", back_populates="requirements")
     created_by_user = db.relationship("User", back_populates="requirements_created")
 
@@ -68,6 +70,7 @@ class DataInput(db.Model):
 
     data_input_id = db.Column(db.BigInteger, primary_key=True)
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
+
     analysis_id = db.Column(UUID(as_uuid=True), default=uuid.uuid4, unique=True, nullable=False)
     category = db.Column(db.String, nullable=False, default="")
     expected_profit = db.Column(db.Float)
@@ -76,20 +79,20 @@ class DataInput(db.Model):
     requirement_id = db.Column(db.BigInteger, db.ForeignKey("requirement.requirement_id"))
     time_to_value = db.Column(db.BigInteger)
 
+    # Relationships
     company = db.relationship("Company", back_populates="data_inputs")
     requirement = db.relationship("Requirement", back_populates="data_inputs")
-
     results = db.relationship("Result", back_populates="data_input", lazy="dynamic")
 
 
 # -----------------------
-# RESULT
+# RESULTS
 # -----------------------
 class Result(db.Model):
     __tablename__ = "results"
 
     id = db.Column(db.BigInteger, primary_key=True)
-    roi_percentage = db.Column(db.Float)
+    roi_percentage = db.Column(db.Float)  # PostgreSQL REAL → Float OK
     time_to_value_days = db.Column(db.BigInteger)
     confidence_value = db.Column(db.Float)
     created_at = db.Column(db.Date)
@@ -97,5 +100,6 @@ class Result(db.Model):
     requirement_id = db.Column(db.BigInteger, db.ForeignKey("requirement.requirement_id"))
     data_input_id = db.Column(db.BigInteger, db.ForeignKey("data_input.data_input_id"))
 
+    # Relationships
     requirement = db.relationship("Requirement", back_populates="results")
     data_input = db.relationship("DataInput", back_populates="results")
