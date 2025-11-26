@@ -233,3 +233,29 @@ def edit_project(project_id):
                            requirement=requirement,
                            data_input=data_input,
                            result=result)
+
+
+
+# -----------------------
+# DELETE PROJECT
+# -----------------------
+@main.route('/delete/<int:project_id>', methods=['POST'])
+def delete_project(project_id):
+    if 'user_id' not in session:
+        return redirect(url_for("main.login"))
+
+    requirement = Requirement.query.get(project_id)
+    data_input = DataInput.query.filter_by(requirement_id=project_id).first()
+    result = Result.query.filter_by(requirement_id=project_id).first()
+
+    # In juiste volgorde verwijderen om foreign keys te respecteren
+    if result:
+        db.session.delete(result)
+    if data_input:
+        db.session.delete(data_input)
+    if requirement:
+        db.session.delete(requirement)
+
+    db.session.commit()
+
+    return redirect(url_for('main.projects'))

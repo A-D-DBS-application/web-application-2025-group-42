@@ -58,7 +58,10 @@
         <h1 class="display-5 fw-bold">Welcome back, {{ username }}!</h1>
         <p class="lead mb-4">Your account is successfully logged in.</p>
         <a href="{{ url_for('main.analysis') }}" class="btn btn-primary btn-lg">
-            Go to Analysis Dashboard
+            Start New Analysis
+        </a>
+        <a href="{{ url_for('main.projects') }}" class="btn btn-outline-primary btn-lg">
+            Projects Dashboard
         </a>
       </div>
       {% else %}
