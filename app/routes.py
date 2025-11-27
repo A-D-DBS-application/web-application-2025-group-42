@@ -90,26 +90,30 @@ def projects():
         else:
             total_cost = None
 
+        # -----------------------------
+        # FIX: geef ALTIJD alle velden mee (ook als None)
+        # -----------------------------
         project_data.append({
             "project_id": r.requirement_id,
             "name": r.name,
             "total_cost": total_cost,
 
-            # current values
-            "time_to_value": data_input.time_to_value if data_input else None,
+            # CURRENT
             "confidence": result.confidence_value if result else None,
+            "time_to_value": result.time_to_value if result else None,
             "roi": result.roi_percentage if result else None,
 
-            # old values
+            # OLD VALUES (fix!)
+            "old_confidence": result.old_confidence_value if result else None,
             "old_time_to_value": result.old_time_to_value if result else None,
-            "old_confidence": result.old_confidence_value if result else None
+            "old_roi": result.old_roi_percentage if result else None,
         })
 
     return render_template("projects.html", username=user.name, project_data=project_data)
 
 
 # -----------------------
-# ANALYSIS
+# ANALYSIS (PROJECT AANMAKEN)
 # -----------------------
 @main.route('/analysis', methods=['GET', 'POST'])
 def analysis():
@@ -119,29 +123,33 @@ def analysis():
     user = User.query.get(session['user_id'])
 
     if request.method == 'POST':
+
         project_name = request.form.get('project_name')
 
+        # COST
         days_required = float(request.form.get('days_required'))
         worked_hours = float(request.form.get('hours_per_day'))
         cost_per_hour = float(request.form.get('internal_hourly_cost'))
         extern_costs = float(request.form.get('external_costs'))
         fixed_costs = float(request.form.get('one_time_costs'))
 
+        # PROFIT
         gained_hours = float(request.form.get('hours_saved_per_month'))
         extra_turnover = float(request.form.get('extra_revenue_per_month'))
         profit_margin = float(request.form.get('profit_margin_percent'))
         horizon = float(request.form.get('horizon_months'))
 
+        # TIME TO VALUE
         q1 = int(request.form.get('q1_type_product'))
         q2 = int(request.form.get('q2_complexiteit'))
         q3 = int(request.form.get('q3_teams'))
         q4 = int(request.form.get('q4_sector'))
         q5 = int(request.form.get('q5_data'))
         q6 = int(request.form.get('q6_extern'))
+
         confidence = float(request.form.get('confidence'))
 
         total_score = q1 + q2 + q3 + q4 + q5 + q6
-
         if total_score <= 8: ttv_zone = 1
         elif total_score <= 11: ttv_zone = 2
         elif total_score <= 14: ttv_zone = 3
@@ -183,16 +191,22 @@ def analysis():
             company_id=user.company_id,
             requirement_id=requirement.requirement_id
         )
+
         db.session.add(data_input)
         db.session.commit()
 
+        # RESULT OPSLAAN – LET OP: old_* waarden zijn hier meteen None
         result = Result(
             roi_percentage=roi_percentage,
             time_to_value=ttv_zone,
             confidence_value=confidence,
+            old_roi_percentage=None,
+            old_confidence_value=None,
+            old_time_to_value=None,
             requirement_id=requirement.requirement_id,
             data_input_id=data_input.data_input_id
         )
+
         db.session.add(result)
         db.session.commit()
 
@@ -214,7 +228,11 @@ def edit_project(project_id):
     result = Result.query.filter_by(requirement_id=project_id).first()
 
     if request.method == 'POST':
+
+        # UPDATE EXACT ZOALS ANALYSIS
+
         project_name = request.form.get('project_name')
+        requirement.name = project_name
 
         days_required = float(request.form.get('days_required'))
         worked_hours = float(request.form.get('hours_per_day'))
@@ -233,10 +251,10 @@ def edit_project(project_id):
         q4 = int(request.form.get('q4_sector'))
         q5 = int(request.form.get('q5_data'))
         q6 = int(request.form.get('q6_extern'))
+
         confidence = float(request.form.get('confidence'))
 
         total_score = q1 + q2 + q3 + q4 + q5 + q6
-
         if total_score <= 8: ttv_zone = 1
         elif total_score <= 11: ttv_zone = 2
         elif total_score <= 14: ttv_zone = 3
@@ -247,16 +265,15 @@ def edit_project(project_id):
         else: ttv_zone = 8
 
         internal_cost = days_required * worked_hours * cost_per_hour
-        total_investment_cost = internal_cost + extern_costs + fixed_costs
+        total_cost = internal_cost + extern_costs + fixed_costs
 
         time_saving_value = gained_hours * cost_per_hour * horizon
         revenue_profit = extra_turnover * (profit_margin / 100) * horizon
 
         expected_profit = time_saving_value + revenue_profit
-        new_roi = (expected_profit / total_investment_cost) * 100 if total_investment_cost > 0 else 0
+        new_roi = (expected_profit / total_cost) * 100 if total_cost > 0 else 0
 
-        requirement.name = project_name
-
+        # DATA INPUT UPDATE
         data_input.days_required = days_required
         data_input.worked_hours = worked_hours
         data_input.cost_per_hour = cost_per_hour
@@ -268,26 +285,24 @@ def edit_project(project_id):
         data_input.horizon = horizon
         data_input.time_to_value = ttv_zone
 
-        # SAVE OLD VALUES
+        # RESULT – SAVE OLD VALUES
         result.old_roi_percentage = result.roi_percentage
         result.old_confidence_value = result.confidence_value
         result.old_time_to_value = result.time_to_value
 
         # SAVE NEW VALUES
         result.roi_percentage = new_roi
-        result.confidence_value = confidence
         result.time_to_value = ttv_zone
+        result.confidence_value = confidence
 
         db.session.commit()
 
         return redirect(url_for("main.projects"))
 
-    return render_template(
-        "edit_project.html",
-        requirement=requirement,
-        data_input=data_input,
-        result=result
-    )
+    return render_template("edit_project.html",
+                           requirement=requirement,
+                           data_input=data_input,
+                           result=result)
 
 
 # -----------------------
