@@ -84,7 +84,6 @@ def projects():
         data_input = DataInput.query.filter_by(requirement_id=r.requirement_id).first()
         result = Result.query.filter_by(requirement_id=r.requirement_id).first()
 
-        # Totale kost berekenen
         if data_input:
             internal_cost = (data_input.days_required or 0) * (data_input.worked_hours or 0) * (data_input.cost_per_hour or 0)
             total_cost = internal_cost + (data_input.extern_costs or 0) + (data_input.fixed_costs or 0)
@@ -95,16 +94,22 @@ def projects():
             "project_id": r.requirement_id,
             "name": r.name,
             "total_cost": total_cost,
+
+            # current values
             "time_to_value": data_input.time_to_value if data_input else None,
             "confidence": result.confidence_value if result else None,
-            "roi": result.roi_percentage if result else None
+            "roi": result.roi_percentage if result else None,
+
+            # old values
+            "old_time_to_value": result.old_time_to_value if result else None,
+            "old_confidence": result.old_confidence_value if result else None
         })
 
     return render_template("projects.html", username=user.name, project_data=project_data)
 
 
 # -----------------------
-# ANALYSIS (PROJECT AANMAKEN)
+# ANALYSIS
 # -----------------------
 @main.route('/analysis', methods=['GET', 'POST'])
 def analysis():
@@ -114,35 +119,29 @@ def analysis():
     user = User.query.get(session['user_id'])
 
     if request.method == 'POST':
-
-        # FORM DATA
         project_name = request.form.get('project_name')
 
-        # COST INPUTS
         days_required = float(request.form.get('days_required'))
         worked_hours = float(request.form.get('hours_per_day'))
         cost_per_hour = float(request.form.get('internal_hourly_cost'))
         extern_costs = float(request.form.get('external_costs'))
         fixed_costs = float(request.form.get('one_time_costs'))
 
-        # PROFIT INPUTS
         gained_hours = float(request.form.get('hours_saved_per_month'))
         extra_turnover = float(request.form.get('extra_revenue_per_month'))
         profit_margin = float(request.form.get('profit_margin_percent'))
         horizon = float(request.form.get('horizon_months'))
 
-        # TIME TO VALUE QUESTIONS
         q1 = int(request.form.get('q1_type_product'))
         q2 = int(request.form.get('q2_complexiteit'))
         q3 = int(request.form.get('q3_teams'))
         q4 = int(request.form.get('q4_sector'))
         q5 = int(request.form.get('q5_data'))
         q6 = int(request.form.get('q6_extern'))
-
         confidence = float(request.form.get('confidence'))
 
-        # TIME TO VALUE ZONE
         total_score = q1 + q2 + q3 + q4 + q5 + q6
+
         if total_score <= 8: ttv_zone = 1
         elif total_score <= 11: ttv_zone = 2
         elif total_score <= 14: ttv_zone = 3
@@ -152,7 +151,6 @@ def analysis():
         elif total_score <= 26: ttv_zone = 7
         else: ttv_zone = 8
 
-        # ROI BEREKENING
         internal_cost = days_required * worked_hours * cost_per_hour
         total_investment_cost = internal_cost + extern_costs + fixed_costs
 
@@ -162,7 +160,6 @@ def analysis():
         expected_profit = time_saving_value + revenue_profit
         roi_percentage = (expected_profit / total_investment_cost) * 100 if total_investment_cost > 0 else 0
 
-        # REQUIREMENT OPSLAAN
         requirement = Requirement(
             name=project_name,
             company_id=user.company_id,
@@ -171,7 +168,6 @@ def analysis():
         db.session.add(requirement)
         db.session.commit()
 
-        # DATA INPUT OPSLAAN
         data_input = DataInput(
             category="default",
             days_required=days_required,
@@ -190,14 +186,10 @@ def analysis():
         db.session.add(data_input)
         db.session.commit()
 
-        # RESULT OPSLAAN (Nieuwe waarden hebben geen 'old' waarden)
         result = Result(
             roi_percentage=roi_percentage,
             time_to_value=ttv_zone,
             confidence_value=confidence,
-            old_roi_percentage=None,
-            old_confidence_value=None,
-            old_time_to_value=None,
             requirement_id=requirement.requirement_id,
             data_input_id=data_input.data_input_id
         )
@@ -222,7 +214,6 @@ def edit_project(project_id):
     result = Result.query.filter_by(requirement_id=project_id).first()
 
     if request.method == 'POST':
-
         project_name = request.form.get('project_name')
 
         days_required = float(request.form.get('days_required'))
@@ -242,11 +233,10 @@ def edit_project(project_id):
         q4 = int(request.form.get('q4_sector'))
         q5 = int(request.form.get('q5_data'))
         q6 = int(request.form.get('q6_extern'))
-
         confidence = float(request.form.get('confidence'))
 
-        # TIME TO VALUE
         total_score = q1 + q2 + q3 + q4 + q5 + q6
+
         if total_score <= 8: ttv_zone = 1
         elif total_score <= 11: ttv_zone = 2
         elif total_score <= 14: ttv_zone = 3
@@ -256,7 +246,6 @@ def edit_project(project_id):
         elif total_score <= 26: ttv_zone = 7
         else: ttv_zone = 8
 
-        # ROI
         internal_cost = days_required * worked_hours * cost_per_hour
         total_investment_cost = internal_cost + extern_costs + fixed_costs
 
@@ -266,10 +255,8 @@ def edit_project(project_id):
         expected_profit = time_saving_value + revenue_profit
         new_roi = (expected_profit / total_investment_cost) * 100 if total_investment_cost > 0 else 0
 
-        # REQUIREMENT UPDATE
         requirement.name = project_name
 
-        # DATA INPUT UPDATE
         data_input.days_required = days_required
         data_input.worked_hours = worked_hours
         data_input.cost_per_hour = cost_per_hour
@@ -281,12 +268,12 @@ def edit_project(project_id):
         data_input.horizon = horizon
         data_input.time_to_value = ttv_zone
 
-        # RESULT UPDATE — BEWAAR OUDE WAARDEN
+        # SAVE OLD VALUES
         result.old_roi_percentage = result.roi_percentage
         result.old_confidence_value = result.confidence_value
         result.old_time_to_value = result.time_to_value
 
-        # SLA NIEUWE WAARDEN OP
+        # SAVE NEW VALUES
         result.roi_percentage = new_roi
         result.confidence_value = confidence
         result.time_to_value = ttv_zone

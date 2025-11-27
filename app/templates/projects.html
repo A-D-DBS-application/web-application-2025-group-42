@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.4.0"></script>
 
     <style>
         body {
@@ -46,7 +47,7 @@
 <div class="container">
 
     {% if project_data|length == 0 %}
-    <!-- GEEN PROJECTEN -->
+
     <div class="text-center" style="margin-top: 80px;">
         <h1 class="fw-bold">Your Projects</h1>
         <p class="text-secondary">Add and manage all your analyses.</p>
@@ -57,35 +58,34 @@
     </div>
 
     {% else %}
-    <!-- WEL PROJECTEN -->
+
     <h1 class="fw-bold mt-4">Your Projects</h1>
     <p class="text-secondary">Overview of your project analyses.</p>
 
-    <!-- ADD NEW PROJECT BUTTON -->
     <div class="text-center mt-3 mb-4">
         <a href="{{ url_for('main.analysis') }}" class="btn btn-primary new-project-btn">
             + Add New Project
         </a>
     </div>
 
-    <!-- GECENTREERDE GRAFIEK -->
+    <!-- GRAFIEK -->
     <div class="d-flex justify-content-center mt-4">
         <div class="box" style="width: 600px;">
             <canvas id="projectChart" height="120"></canvas>
         </div>
     </div>
 
-    <!-- TABEL DIRECT ONDER GRAFIEK -->
     <hr style="border-color: #0d6efd; margin: 25px 0;">
 
+    <!-- TABEL -->
     <table class="table table-hover">
         <thead>
             <tr>
                 <th>Project</th>
                 <th>Cost (€)</th>
                 <th>Confidence</th>
-                <th>TTV</th>
-                <th>ROI (%)</th>
+                <th>TV</th>
+                <th>ROI</th>
                 <th>Edit</th>
                 <th>Delete</th>
             </tr>
@@ -94,10 +94,10 @@
         {% for p in project_data %}
             <tr>
                 <td>{{ p.name }}</td>
-                <td>{{ p.total_cost | round(2) }}</td>
+                <td>{{ p.total_cost }}</td>
                 <td>{{ p.confidence }}</td>
                 <td>{{ p.time_to_value }}</td>
-                <td>{{ p.roi | round(2) }}</td>
+                <td>{{ p.roi }}</td>
 
                 <td>
                     <a href="{{ url_for('main.edit_project', project_id=p.project_id) }}"
@@ -108,7 +108,8 @@
 
                 <td>
                     <form action="{{ url_for('main.delete_project', project_id=p.project_id) }}" 
-                          method="POST" onsubmit="return confirm('Are you sure you want to delete this project?');">
+                          method="POST"
+                          onsubmit="return confirm('Are you sure you want to delete this project?');">
                         <button class="btn btn-outline-danger btn-sm">
                             <i class="bi bi-trash"></i>
                         </button>
@@ -120,59 +121,100 @@
     </table>
 
     {% endif %}
-
 </div>
 
 <footer class="text-center mt-5 text-secondary">
     © 2025 VECTR. All rights reserved.
 </footer>
 
+<!-- ===================== -->
+<!-- GRAFIEK SCRIPT -->
+<!-- ===================== -->
 <script>
-{% if project_data|length > 0 %}
-    const ctx = document.getElementById('projectChart').getContext('2d');
 
-    new Chart(ctx, {
-        type: 'scatter',
-        data: {
-            datasets: [{
-                label: 'Project Data',
-                data: [
-                    {% for p in project_data %}
-                        { x: {{ p.confidence or 0 }}, y: {{ p.time_to_value or 0 }} },
-                    {% endfor %}
-                ],
-                pointRadius: 6,
-                borderColor: '#4ea3ff',
-                backgroundColor: '#4ea3ff'
-            }]
+{% if project_data|length > 0 %}
+
+const ctx = document.getElementById('projectChart').getContext('2d');
+
+let currentPoints = [];
+let oldPoints = [];
+let arrowAnnotations = {};
+
+{% for p in project_data %}
+
+    // ALTIJD nieuwe punt toevoegen
+    currentPoints.push({
+        x: {{ p.confidence or 0 }},
+        y: {{ p.time_to_value or 0 }}
+    });
+
+    // Alleen oude punt toevoegen als die bestaat
+    {% if p.old_confidence and p.old_time_to_value %}
+        oldPoints.push({
+            x: {{ p.old_confidence }},
+            y: {{ p.old_time_to_value }}
+        });
+
+        // Pijl tussen oude en nieuwe punt
+        arrowAnnotations["arrow{{ loop.index }}"] = {
+            type: 'line',
+            xMin: {{ p.old_confidence }},
+            yMin: {{ p.old_time_to_value }},
+            xMax: {{ p.confidence }},
+            yMax: {{ p.time_to_value }},
+            borderColor: 'rgba(0,0,0,0.6)',
+            borderWidth: 2,
+            arrowHeads: {
+                end: { enabled: true }
+            }
+        };
+    {% endif %}
+
+{% endfor %}
+
+
+new Chart(ctx, {
+    type: 'scatter',
+    data: {
+        datasets: [
+            {
+                label: "Current",
+                data: currentPoints,
+                pointRadius: 7,
+                backgroundColor: "#4ea3ff"
+            },
+
+            {% if project_data|selectattr("old_confidence")|list|length > 0 %}
+            {
+                label: "Old",
+                data: oldPoints,
+                pointRadius: 7,
+                backgroundColor: "gray"
+            }
+            {% endif %}
+        ]
+    },
+    options: {
+        plugins: {
+            annotation: {
+                annotations: arrowAnnotations
+            }
         },
-        options: {
-            scales: {
-                x: {
-                    min: 0,
-                    max: 10,
-                    title: {
-                        display: true,
-                        text: 'Confidence Level',
-                        color: '#0d6efd'
-                    },
-                    ticks: {
-                        color: '#0d6efd'
-                    }
-                },
-                y: {
-                    title: {
-                        display: true,
-                        text: 'Time to Value',
-                        color: '#0d6efd'
-                    },
-                    ticks: {
-                        color: '#0d6efd'
-                    }
-                }
+        scales: {
+            x: {
+                min: 0,
+                max: 10,
+                title: { display: true, text: "Confidence Level", color: "#0d6efd" }
+            },
+            y: {
+                min: 0,
+                max: 10,
+                title: { display: true, text: "Time to Value", color: "#0d6efd" }
             }
         }
-    });
+    }
+});
+
 {% endif %}
 </script>
 
