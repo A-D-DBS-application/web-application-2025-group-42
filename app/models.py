@@ -17,7 +17,6 @@ class Company(db.Model):
     description = db.Column(db.Text)
     country = db.Column(db.String, nullable=False)
 
-    # Relationships
     users = db.relationship("User", back_populates="company", lazy="dynamic")
     requirements = db.relationship("Requirement", back_populates="company", lazy="dynamic")
     data_inputs = db.relationship("DataInput", back_populates="company", lazy="dynamic")
@@ -34,16 +33,14 @@ class User(db.Model):
     email = db.Column(db.String, nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
 
-    # Foreign key name is "company"
     company_id = db.Column("company", db.BigInteger, db.ForeignKey("company.id"), nullable=False)
 
-    # Relationship
     company = db.relationship("Company", back_populates="users")
     requirements_created = db.relationship("Requirement", back_populates="created_by_user", lazy="dynamic")
 
 
 # -----------------------
-# REQUIREMENT  (PROJECT)
+# REQUIREMENT (PROJECT)
 # -----------------------
 class Requirement(db.Model):
     __tablename__ = "requirement"
@@ -54,7 +51,6 @@ class Requirement(db.Model):
     created_by = db.Column(db.BigInteger, db.ForeignKey("user.id"))
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
 
-    # Relationships
     company = db.relationship("Company", back_populates="requirements")
     created_by_user = db.relationship("User", back_populates="requirements_created")
 
@@ -73,33 +69,50 @@ class DataInput(db.Model):
 
     analysis_id = db.Column(UUID(as_uuid=True), default=uuid.uuid4, unique=True, nullable=False)
     category = db.Column(db.String, nullable=False, default="")
-    expected_profit = db.Column(db.Float)
-    total_investment_cost = db.Column(db.Float)
-    company_id = db.Column(db.BigInteger, db.ForeignKey("company.id"), nullable=False)
-    requirement_id = db.Column(db.BigInteger, db.ForeignKey("requirement.requirement_id"))
+
+    days_required = db.Column(db.BigInteger)
+    worked_hours = db.Column(db.Float)   # hours/day
+    cost_per_hour = db.Column(db.Float)
+    extern_costs = db.Column(db.Float)
+    fixed_costs = db.Column(db.Float)
+
+    gained_hours = db.Column(db.Float)
+    extra_turnover = db.Column(db.Float)
+    profit_margin = db.Column(db.Float)
+    horizon = db.Column(db.Float)
+
     time_to_value = db.Column(db.BigInteger)
 
-    # Relationships
+    company_id = db.Column(db.BigInteger, db.ForeignKey("company.id"), nullable=False)
+    requirement_id = db.Column(db.BigInteger, db.ForeignKey("requirement.requirement_id"))
+
     company = db.relationship("Company", back_populates="data_inputs")
     requirement = db.relationship("Requirement", back_populates="data_inputs")
     results = db.relationship("Result", back_populates="data_input", lazy="dynamic")
 
 
 # -----------------------
-# RESULTS
+# RESULTS (NEW + OLD METRICS)
 # -----------------------
 class Result(db.Model):
     __tablename__ = "results"
 
     id = db.Column(db.BigInteger, primary_key=True)
-    roi_percentage = db.Column(db.Float)  # PostgreSQL REAL → Float OK
-    time_to_value_days = db.Column(db.BigInteger)
+
+    # NEW VALUES
+    roi_percentage = db.Column(db.Float)
+    time_to_value = db.Column(db.BigInteger)
     confidence_value = db.Column(db.Float)
+
+    # OLD VALUES (HISTORICAL SNAPSHOT)
+    old_roi_percentage = db.Column(db.Float)
+    old_confidence_value = db.Column(db.Float)
+    old_time_to_value = db.Column(db.BigInteger)
+
     created_at = db.Column(db.Date)
 
     requirement_id = db.Column(db.BigInteger, db.ForeignKey("requirement.requirement_id"))
     data_input_id = db.Column(db.BigInteger, db.ForeignKey("data_input.data_input_id"))
 
-    # Relationships
     requirement = db.relationship("Requirement", back_populates="results")
     data_input = db.relationship("DataInput", back_populates="results")

@@ -82,11 +82,10 @@
         <thead>
             <tr>
                 <th>Project</th>
-                <th>Profit (€)</th>
                 <th>Cost (€)</th>
                 <th>Confidence</th>
-                <th>TV</th>
-                <th>ROI</th>
+                <th>TTV</th>
+                <th>ROI (%)</th>
                 <th>Edit</th>
                 <th>Delete</th>
             </tr>
@@ -95,17 +94,18 @@
         {% for p in project_data %}
             <tr>
                 <td>{{ p.name }}</td>
-                <td>{{ p.expected_profit }}</td>
-                <td>{{ p.total_cost }}</td>
+                <td>{{ p.total_cost | round(2) }}</td>
                 <td>{{ p.confidence }}</td>
                 <td>{{ p.time_to_value }}</td>
-                <td>{{ p.roi }}</td>
+                <td>{{ p.roi | round(2) }}</td>
+
                 <td>
                     <a href="{{ url_for('main.edit_project', project_id=p.project_id) }}"
                        class="btn btn-outline-primary btn-sm">
                         <i class="bi bi-pencil-square"></i>
                     </a>
                 </td>
+
                 <td>
                     <form action="{{ url_for('main.delete_project', project_id=p.project_id) }}" 
                           method="POST" onsubmit="return confirm('Are you sure you want to delete this project?');">
@@ -150,19 +150,14 @@
             scales: {
                 x: {
                     min: 0,
-                    max: 100,
+                    max: 10,
                     title: {
                         display: true,
                         text: 'Confidence Level',
                         color: '#0d6efd'
                     },
                     ticks: {
-                        color: '#0d6efd',
-                        callback: function(value, index, ticks) {
-                            if (index === 0) return 'Low';
-                            if (index === ticks.length - 1) return 'High';
-                            return '';
-                        }
+                        color: '#0d6efd'
                     }
                 },
                 y: {
@@ -172,12 +167,7 @@
                         color: '#0d6efd'
                     },
                     ticks: {
-                        color: '#0d6efd',
-                        callback: function(value, index, ticks) {
-                            if (index === 0) return 'Slow';
-                            if (index === ticks.length - 1) return 'Fast';
-                            return '';
-                        }
+                        color: '#0d6efd'
                     }
                 }
             }
