@@ -144,11 +144,36 @@ const arrows = [];
 
 let datasets = [];
 
+function getZoneColor(conf, ttv) {
+    // Rood (links + onder)
+    if (conf <= 7 && ttv <= 5) {
+        return "#ff0000";
+    }
+
+    // Oranje (middenzones)
+    if (conf <= 7 && ttv > 5) {
+        return "#e67e22";
+    }
+
+    // Lichtgroen (rechts-midden)
+    if (conf > 7 && ttv > 5 && ttv <= 7) {
+        return "#9acd32";
+    }
+
+    // Donkergroen (rechts-boven)
+    if (conf > 7 && ttv > 7) {
+        return "#009933";
+    }
+
+    return "#000000"; // fallback
+}
+
+
 // ALWAYS SHOW CURRENT POINTS
 datasets.push({
     label: "Current",
     data: currentPoints,
-    backgroundColor: "#4ea3ff",
+    backgroundColor: ctx => getZoneColor(ctx.raw.x, ctx.raw.y),
     pointRadius: ctx => 5 + Math.min((ctx.raw.roi || 0) / 10, 12)
 });
 
@@ -157,7 +182,7 @@ if (oldPoints.length > 0) {
     datasets.push({
         label: "Old",
         data: oldPoints,
-        backgroundColor: "gray",
+        backgroundColor: ctx => getZoneColor(ctx.raw.x, ctx.raw.y),
         pointRadius: ctx => 4 + Math.min((ctx.raw.roi || 0) / 10, 10)
     });
 }

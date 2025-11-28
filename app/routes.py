@@ -1,5 +1,5 @@
 from flask import Blueprint, request, redirect, url_for, render_template, session
-from .models import db, User, Requirement, DataInput, Result
+from .models import db, User,Company, Requirement, DataInput, Result
 
 main = Blueprint('main', __name__)
 
