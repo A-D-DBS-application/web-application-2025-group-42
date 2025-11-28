@@ -165,13 +165,15 @@ def analysis():
 
         total_score = q1 + q2 + q3 + q4 + q5 + q6
         if total_score <= 8: ttv_zone = 1
-        elif total_score <= 11: ttv_zone = 2
-        elif total_score <= 14: ttv_zone = 3
-        elif total_score <= 17: ttv_zone = 4
-        elif total_score <= 20: ttv_zone = 5
-        elif total_score <= 23: ttv_zone = 6
-        elif total_score <= 26: ttv_zone = 7
-        else: ttv_zone = 8
+        elif total_score <= 10: ttv_zone = 2
+        elif total_score <= 12: ttv_zone = 3
+        elif total_score <= 14: ttv_zone = 4
+        elif total_score <= 16: ttv_zone = 5
+        elif total_score <= 18: ttv_zone = 6
+        elif total_score <= 20: ttv_zone = 7
+        elif total_score <= 22: ttv_zone = 8
+        elif total_score <= 25: ttv_zone = 9
+        else: ttv_zone = 10
 
         internal_cost = days_required * worked_hours * cost_per_hour
         total_investment_cost = internal_cost + extern_costs + fixed_costs

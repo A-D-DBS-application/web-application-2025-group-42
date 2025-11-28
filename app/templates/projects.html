@@ -107,90 +107,78 @@
 <script>
 {% if project_data|length > 0 %}
 
+// --------- ZONEKLEUR FUNCTIE ---------
+function getZoneColor(conf, ttv) {
+    if (conf <= 7 && ttv <= 5) return "#ff0000";       // rood
+    if (conf <= 7 && ttv > 5) return "#e67e22";        // oranje
+    if (conf > 7 && ttv > 4 && ttv <= 7) return "#9acd32"; // lichtgroen
+    if (conf > 7 && ttv > 7) return "#009933";         // donkergroen
+    if (conf > 7 && ttv <= 4) return "#e67e22";        // oranje
+    if (conf <= 1 && ttv > 7) return "#ff0000";       // rood
+    return "#000000";
+}
+
 const ctx = document.getElementById('projectChart').getContext('2d');
 
+// --------- DATA LADEN ---------
 const currentPoints = [];
 const oldPoints = [];
 const arrows = [];
 
 {% for p in project_data %}
-
-    // CURRENT POINT EXISTS
     {% if p.confidence is not none and p.time_to_value is not none %}
-    currentPoints.push({
-        x: {{ p.confidence }},
-        y: {{ p.time_to_value }},
-        roi: {{ p.roi or 0 }}
-    });
+        currentPoints.push({
+            x: {{ p.confidence }},
+            y: {{ p.time_to_value }},
+            roi: {{ p.roi or 0 }}
+        });
     {% endif %}
 
-    // OLD POINT EXISTS
     {% if p.old_confidence is not none and p.old_time_to_value is not none %}
-    oldPoints.push({
-        x: {{ p.old_confidence }},
-        y: {{ p.old_time_to_value }},
-        roi: {{ p.old_roi or 0 }}
-    });
+        oldPoints.push({
+            x: {{ p.old_confidence }},
+            y: {{ p.old_time_to_value }},
+            roi: {{ p.old_roi or 0 }}
+        });
 
-    arrows.push({
-        x1: {{ p.old_confidence }},
-        y1: {{ p.old_time_to_value }},
-        x2: {{ p.confidence }},
-        y2: {{ p.time_to_value }}
-    });
+        arrows.push({
+            x1: {{ p.old_confidence }},
+            y1: {{ p.old_time_to_value }},
+            x2: {{ p.confidence }},
+            y2: {{ p.time_to_value }}
+        });
     {% endif %}
-
 {% endfor %}
 
+// --------- DATASETS (GEEN LABELS) ---------
 let datasets = [];
 
-function getZoneColor(conf, ttv) {
-    // Rood (links + onder)
-    if (conf <= 7 && ttv <= 5) {
-        return "#ff0000";
-    }
-
-    // Oranje (middenzones)
-    if (conf <= 7 && ttv > 5) {
-        return "#e67e22";
-    }
-
-    // Lichtgroen (rechts-midden)
-    if (conf > 7 && ttv > 5 && ttv <= 7) {
-        return "#9acd32";
-    }
-
-    // Donkergroen (rechts-boven)
-    if (conf > 7 && ttv > 7) {
-        return "#009933";
-    }
-
-    return "#000000"; // fallback
-}
-
-
-// ALWAYS SHOW CURRENT POINTS
+// CURRENT
 datasets.push({
-    label: "Current",
     data: currentPoints,
     backgroundColor: ctx => getZoneColor(ctx.raw.x, ctx.raw.y),
-    pointRadius: ctx => 5 + Math.min((ctx.raw.roi || 0) / 10, 12)
+    pointRadius: ctx => 6 + Math.min((ctx.raw.roi || 0) / 10, 12)
 });
 
-// ONLY SHOW OLD POINTS IF THEY EXIST
+// OLD
 if (oldPoints.length > 0) {
     datasets.push({
-        label: "Old",
         data: oldPoints,
         backgroundColor: ctx => getZoneColor(ctx.raw.x, ctx.raw.y),
-        pointRadius: ctx => 4 + Math.min((ctx.raw.roi || 0) / 10, 10)
+        pointRadius: ctx => 6 + Math.min((ctx.raw.roi || 0) / 10, 12)
     });
 }
 
+// --------- CHART CONFIG (LEGEND UIT) ---------
 const chartConfig = {
     type: 'scatter',
     data: { datasets: datasets },
     options: {
+        plugins: {
+            legend: {
+                display: false   // 👈 VERWIJDERT JE undefined/defined legend
+            }
+        },
         scales: {
             x: {
                 min: 0,
@@ -206,28 +194,59 @@ const chartConfig = {
     }
 };
 
-// ONLY ADD ARROWS IF THERE IS OLD DATA
+// --------- ARROWS ---------
 if (arrows.length > 0) {
     chartConfig.plugins = [{
         id: 'arrows',
         afterDraw: chart => {
             const cx = chart.ctx;
+
             arrows.forEach(a => {
                 const x1 = chart.scales.x.getPixelForValue(a.x1);
                 const y1 = chart.scales.y.getPixelForValue(a.y1);
                 const x2 = chart.scales.x.getPixelForValue(a.x2);
                 const y2 = chart.scales.y.getPixelForValue(a.y2);
 
+                // ------- STIPPENLIJN -------
                 cx.beginPath();
-                cx.moveTo(x1, y1);
-                cx.lineTo(x2, y2);
-                cx.lineWidth = 2;
-                cx.strokeStyle = "#0d6efd";
+                cx.setLineDash([10, 4]);     // dashed
+                cx.moveTo(x1, y1);  
+                cx.lineTo(x2 , y2);
+                cx.lineWidth = 1;
+                cx.strokeStyle = "#000000";
+                cx.stroke();
+                cx.setLineDash([]);          // reset dashed
+
+                // ------- PIJLPUNT -------
+                const headLength = 12;       // lengte van de pijl
+                const angle = Math.atan2(y2 - y1, x2 - x1);
+
+                cx.beginPath();
+                cx.moveTo(x2, y2);
+
+                // Linkerpunt van de pijlkop
+                cx.lineTo(
+                    x2 - headLength * Math.cos(angle - Math.PI / 6),
+                    y2 - headLength * Math.sin(angle - Math.PI / 6)
+                );
+
+                cx.moveTo(x2, y2);
+
+                // Rechterpunt van de pijlkop
+                cx.lineTo(
+                    x2 - headLength * Math.cos(angle + Math.PI / 6),
+                    y2 - headLength * Math.sin(angle + Math.PI / 6)
+                );
+
+                cx.strokeStyle = "#000000";
+                cx.lineWidth = 1;
                 cx.stroke();
             });
         }
     }];
 }
+
+
 
 new Chart(ctx, chartConfig);
 
