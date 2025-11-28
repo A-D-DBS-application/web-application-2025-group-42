@@ -2,9 +2,3 @@ Flask
 Flask-SQLAlchemy
 Flask-Migrate
 psycopg2-binary
-
-flask
-gunicorn
-sqlalchemy
-psycopg2-binary
-python-dotenv

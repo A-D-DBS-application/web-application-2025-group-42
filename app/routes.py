@@ -22,18 +22,39 @@ def index():
 @main.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
+
+        # USER FIELDS
         name = request.form.get('name')
         email = request.form.get('email')
 
+        # COMPANY FIELDS
+        company_name = request.form.get('company_name')
+        industry = request.form.get('industry')
+        founded_date = request.form.get('founded_date')
+        description = request.form.get('description')
+        country = request.form.get('country')
+
+        # 1. CREATE COMPANY
+        new_company = Company(
+            name=company_name,
+            industry=industry,
+            founded_date=founded_date,
+            description=description,
+            country=country
+        )
+        db.session.add(new_company)
+        db.session.commit()
+
+        # 2. CREATE USER with company_id from new company
         new_user = User(
             name=name,
             email=email,
-            company_id=1
+            company_id=new_company.id
         )
-
         db.session.add(new_user)
         db.session.commit()
 
+        # LOGIN USER
         session['user_id'] = new_user.id
         return redirect(url_for("main.projects"))
 
@@ -90,20 +111,13 @@ def projects():
         else:
             total_cost = None
 
-        # -----------------------------
-        # FIX: geef ALTIJD alle velden mee (ook als None)
-        # -----------------------------
         project_data.append({
             "project_id": r.requirement_id,
             "name": r.name,
             "total_cost": total_cost,
-
-            # CURRENT
             "confidence": result.confidence_value if result else None,
             "time_to_value": result.time_to_value if result else None,
             "roi": result.roi_percentage if result else None,
-
-            # OLD VALUES (fix!)
             "old_confidence": result.old_confidence_value if result else None,
             "old_time_to_value": result.old_time_to_value if result else None,
             "old_roi": result.old_roi_percentage if result else None,
