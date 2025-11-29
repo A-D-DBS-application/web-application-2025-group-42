@@ -1,5 +1,6 @@
 from flask import Blueprint, request, redirect, url_for, render_template, session
-from .models import db, User,Company, Requirement, DataInput, Result
+from .models import db, User, Company, Requirement, DataInput, Results
+from sqlalchemy.sql import func
 
 main = Blueprint('main', __name__)
 
@@ -34,7 +35,7 @@ def register():
         description = request.form.get('description')
         country = request.form.get('country')
 
-        # 1. CREATE COMPANY
+        # CREATE COMPANY
         new_company = Company(
             name=company_name,
             industry=industry,
@@ -45,16 +46,15 @@ def register():
         db.session.add(new_company)
         db.session.commit()
 
-        # 2. CREATE USER with company_id from new company
+        # CREATE USER
         new_user = User(
             name=name,
             email=email,
-            company_id=new_company.id
+            company=new_company.id
         )
         db.session.add(new_user)
         db.session.commit()
 
-        # LOGIN USER
         session['user_id'] = new_user.id
         return redirect(url_for("main.projects"))
 
@@ -72,7 +72,6 @@ def login():
 
         if not user:
             return redirect(url_for('main.register'))
-
 
         session['user_id'] = user.id
         return redirect(url_for("main.projects"))
@@ -98,14 +97,15 @@ def projects():
         return redirect(url_for("main.login"))
 
     user = User.query.get(session['user_id'])
-
     requirements = Requirement.query.filter_by(created_by=user.id).all()
 
     project_data = []
+
     for r in requirements:
         data_input = DataInput.query.filter_by(requirement_id=r.requirement_id).first()
-        result = Result.query.filter_by(requirement_id=r.requirement_id).first()
+        result = Results.query.filter_by(requirement_id=r.requirement_id).first()
 
+        # total project cost
         if data_input:
             internal_cost = (data_input.days_required or 0) * (data_input.worked_hours or 0) * (data_input.cost_per_hour or 0)
             total_cost = internal_cost + (data_input.extern_costs or 0) + (data_input.fixed_costs or 0)
@@ -127,6 +127,25 @@ def projects():
     return render_template("projects.html", username=user.name, project_data=project_data)
 
 
+# ------------------------------------------------------------
+# TIME TO VALUE SCORE → LINEAIRE INTERPOLATIE
+# ------------------------------------------------------------
+def calculate_ttv_score(benchmark_1, benchmark_5, benchmark_10, ttv):
+
+    # buiten de range → clampen
+    if ttv <= benchmark_1:
+        return 1
+    if ttv >= benchmark_10:
+        return 10
+
+    # tussen score 1 en score 5
+    if ttv <= benchmark_5:
+        return 1 + ( (ttv - benchmark_1) / (benchmark_5 - benchmark_1) ) * 4
+
+    # tussen score 5 en score 10
+    return 5 + ( (ttv - benchmark_5) / (benchmark_10 - benchmark_5) ) * 5
+
+
 # -----------------------
 # ANALYSIS (PROJECT AANMAKEN)
 # -----------------------
@@ -142,57 +161,53 @@ def analysis():
         project_name = request.form.get('project_name')
 
         # COST
-        days_required = float(request.form.get('days_required'))
-        worked_hours = float(request.form.get('hours_per_day'))
+        days_required = int(request.form.get('days_required'))
+        worked_hours = int(request.form.get('hours_per_day'))
         cost_per_hour = float(request.form.get('internal_hourly_cost'))
         extern_costs = float(request.form.get('external_costs'))
         fixed_costs = float(request.form.get('one_time_costs'))
 
         # PROFIT
-        gained_hours = float(request.form.get('hours_saved_per_month'))
+        gained_hours = int(request.form.get('hours_saved_per_month'))
         extra_turnover = float(request.form.get('extra_revenue_per_month'))
         profit_margin = float(request.form.get('profit_margin_percent'))
         horizon = float(request.form.get('horizon_months'))
 
-        # TIME TO VALUE
-        q1 = int(request.form.get('q1_type_product'))
-        q2 = int(request.form.get('q2_complexiteit'))
-        q3 = int(request.form.get('q3_teams'))
-        q4 = int(request.form.get('q4_sector'))
-        q5 = int(request.form.get('q5_data'))
-        q6 = int(request.form.get('q6_extern'))
+        # BENCHMARKS
+        benchmark_1 = int(request.form.get('benchmark_1'))
+        benchmark_5 = int(request.form.get('benchmark_5'))
+        benchmark_10 = int(request.form.get('benchmark_10'))
+
+
+        # TIME INPUTS
+        time_to_market = float(request.form.get('time_to_market'))
+        time_to_business = float(request.form.get('time_to_business'))
+
+        ttv_sum = time_to_market + time_to_business
+        ttv_score = calculate_ttv_score(benchmark_1, benchmark_5, benchmark_10, ttv_sum)
 
         confidence = float(request.form.get('confidence'))
 
-        total_score = q1 + q2 + q3 + q4 + q5 + q6
-        if total_score <= 8: ttv_zone = 1
-        elif total_score <= 10: ttv_zone = 2
-        elif total_score <= 12: ttv_zone = 3
-        elif total_score <= 14: ttv_zone = 4
-        elif total_score <= 16: ttv_zone = 5
-        elif total_score <= 18: ttv_zone = 6
-        elif total_score <= 20: ttv_zone = 7
-        elif total_score <= 22: ttv_zone = 8
-        elif total_score <= 25: ttv_zone = 9
-        else: ttv_zone = 10
-
+        # ROI
         internal_cost = days_required * worked_hours * cost_per_hour
         total_investment_cost = internal_cost + extern_costs + fixed_costs
 
         time_saving_value = gained_hours * cost_per_hour * horizon
         revenue_profit = extra_turnover * (profit_margin / 100) * horizon
-
         expected_profit = time_saving_value + revenue_profit
+
         roi_percentage = (expected_profit / total_investment_cost) * 100 if total_investment_cost > 0 else 0
 
+        # REQUIREMENT
         requirement = Requirement(
             name=project_name,
-            company_id=user.company_id,
+            company_id=user.company,
             created_by=user.id
         )
         db.session.add(requirement)
         db.session.commit()
 
+        # DATA INPUT
         data_input = DataInput(
             category="default",
             days_required=days_required,
@@ -204,26 +219,30 @@ def analysis():
             extra_turnover=extra_turnover,
             profit_margin=profit_margin,
             horizon=horizon,
-            time_to_value=ttv_zone,
-            company_id=user.company_id,
+
+            benchmark_1=benchmark_1,
+            benchmark_5=benchmark_5,
+            bench_mark_10=benchmark_10,
+
+            company_id=user.company,
             requirement_id=requirement.requirement_id
         )
-
         db.session.add(data_input)
         db.session.commit()
 
-        # RESULT OPSLAAN – LET OP: old_* waarden zijn hier meteen None
-        result = Result(
+        # RESULT
+        result = Results(
             roi_percentage=roi_percentage,
-            time_to_value=ttv_zone,
+            time_to_value=ttv_score,
             confidence_value=confidence,
+
             old_roi_percentage=None,
             old_confidence_value=None,
             old_time_to_value=None,
+
             requirement_id=requirement.requirement_id,
             data_input_id=data_input.data_input_id
         )
-
         db.session.add(result)
         db.session.commit()
 
@@ -242,55 +261,51 @@ def edit_project(project_id):
 
     requirement = Requirement.query.get(project_id)
     data_input = DataInput.query.filter_by(requirement_id=project_id).first()
-    result = Result.query.filter_by(requirement_id=project_id).first()
+    result = Results.query.filter_by(requirement_id=project_id).first()
 
     if request.method == 'POST':
-
-        # UPDATE EXACT ZOALS ANALYSIS
 
         project_name = request.form.get('project_name')
         requirement.name = project_name
 
-        days_required = float(request.form.get('days_required'))
-        worked_hours = float(request.form.get('hours_per_day'))
+        # COST
+        days_required = int(request.form.get('days_required'))
+        worked_hours = int(request.form.get('hours_per_day'))
         cost_per_hour = float(request.form.get('internal_hourly_cost'))
         extern_costs = float(request.form.get('external_costs'))
         fixed_costs = float(request.form.get('one_time_costs'))
 
-        gained_hours = float(request.form.get('hours_saved_per_month'))
+        # PROFIT
+        gained_hours = int(request.form.get('hours_saved_per_month'))
         extra_turnover = float(request.form.get('extra_revenue_per_month'))
         profit_margin = float(request.form.get('profit_margin_percent'))
         horizon = float(request.form.get('horizon_months'))
 
-        q1 = int(request.form.get('q1_type_product'))
-        q2 = int(request.form.get('q2_complexiteit'))
-        q3 = int(request.form.get('q3_teams'))
-        q4 = int(request.form.get('q4_sector'))
-        q5 = int(request.form.get('q5_data'))
-        q6 = int(request.form.get('q6_extern'))
+        # BENCHMARKS (NIEUW)
+        benchmark_1 = data_input.benchmark_1
+        benchmark_5 = data_input.benchmark_5
+        benchmark_10 = data_input.bench_mark_10
+
+
+        # TIME
+        time_to_market = float(request.form.get('time_to_market'))
+        time_to_business = float(request.form.get('time_to_business'))
+        ttv_sum = time_to_market + time_to_business
+        ttv_score = calculate_ttv_score(benchmark_1, benchmark_5, benchmark_10, ttv_sum)
 
         confidence = float(request.form.get('confidence'))
 
-        total_score = q1 + q2 + q3 + q4 + q5 + q6
-        if total_score <= 8: ttv_zone = 1
-        elif total_score <= 11: ttv_zone = 2
-        elif total_score <= 14: ttv_zone = 3
-        elif total_score <= 17: ttv_zone = 4
-        elif total_score <= 20: ttv_zone = 5
-        elif total_score <= 23: ttv_zone = 6
-        elif total_score <= 26: ttv_zone = 7
-        else: ttv_zone = 8
-
+        # ROI
         internal_cost = days_required * worked_hours * cost_per_hour
         total_cost = internal_cost + extern_costs + fixed_costs
 
         time_saving_value = gained_hours * cost_per_hour * horizon
         revenue_profit = extra_turnover * (profit_margin / 100) * horizon
-
         expected_profit = time_saving_value + revenue_profit
+
         new_roi = (expected_profit / total_cost) * 100 if total_cost > 0 else 0
 
-        # DATA INPUT UPDATE
+        # UPDATE DATA INPUT
         data_input.days_required = days_required
         data_input.worked_hours = worked_hours
         data_input.cost_per_hour = cost_per_hour
@@ -300,16 +315,19 @@ def edit_project(project_id):
         data_input.extra_turnover = extra_turnover
         data_input.profit_margin = profit_margin
         data_input.horizon = horizon
-        data_input.time_to_value = ttv_zone
 
-        # RESULT – SAVE OLD VALUES
+        data_input.benchmark_1 = benchmark_1
+        data_input.benchmark_5 = benchmark_5
+        data_input.bench_mark_10 = benchmark_10
+
+        # SAVE OLD VALUES
         result.old_roi_percentage = result.roi_percentage
         result.old_confidence_value = result.confidence_value
         result.old_time_to_value = result.time_to_value
 
-        # SAVE NEW VALUES
+        # UPDATE NEW VALUES
         result.roi_percentage = new_roi
-        result.time_to_value = ttv_zone
+        result.time_to_value = ttv_score
         result.confidence_value = confidence
 
         db.session.commit()
@@ -332,7 +350,7 @@ def delete_project(project_id):
 
     requirement = Requirement.query.get(project_id)
     data_input = DataInput.query.filter_by(requirement_id=project_id).first()
-    result = Result.query.filter_by(requirement_id=project_id).first()
+    result = Results.query.filter_by(requirement_id=project_id).first()
 
     if result:
         db.session.delete(result)

@@ -25,7 +25,7 @@
     <div class="form-box">
         <form method="post" id="analysisForm">
 
-            <!-- STEP 1 -->
+            <!-- STEP 1 – PROJECT NAME -->
             <div class="step active" id="step1">
                 <h2 class="step-title text-center">Project Name</h2>
 
@@ -37,7 +37,7 @@
                 <button type="button" class="btn btn-primary w-100" onclick="nextStep(2)">Next</button>
             </div>
 
-            <!-- STEP 2 – COST INPUTS -->
+            <!-- STEP 2 – ROI COST INPUTS -->
             <div class="step" id="step2">
                 <h2 class="step-title text-center">ROI – Investment Inputs</h2>
 
@@ -47,22 +47,22 @@
                 </div>
 
                 <div class="mb-3">
-                    <label>How many hours per day does this project require?</label>
+                    <label>How many hours per day?</label>
                     <input type="number" name="hours_per_day" class="form-control" required>
                 </div>
 
                 <div class="mb-3">
-                    <label>How much does this project cost per hour? (€)</label>
+                    <label>Internal cost per hour (€)</label>
                     <input type="number" step="0.01" name="internal_hourly_cost" class="form-control" required>
                 </div>
 
                 <div class="mb-3">
-                    <label>How much additional external cost is there? (€)</label>
+                    <label>External costs (€)</label>
                     <input type="number" step="0.01" name="external_costs" class="form-control" required>
                 </div>
 
                 <div class="mb-3">
-                    <label>What are the one-time startup costs?</label>
+                    <label>One-time startup costs (€)</label>
                     <input type="number" step="0.01" name="one_time_costs" class="form-control" required>
                 </div>
 
@@ -75,12 +75,12 @@
                 <h2 class="step-title text-center">Expected Profit Inputs</h2>
 
                 <div class="mb-3">
-                    <label>How many hours does this project save per month?</label>
+                    <label>Hours saved per month</label>
                     <input type="number" name="hours_saved_per_month" class="form-control" required>
                 </div>
 
                 <div class="mb-3">
-                    <label>Additional revenue per month (€)</label>
+                    <label>Extra revenue per month (€)</label>
                     <input type="number" step="0.01" name="extra_revenue_per_month" class="form-control" required>
                 </div>
 
@@ -98,93 +98,49 @@
                 <button type="button" class="btn btn-outline-secondary w-100 mt-2" onclick="nextStep(2)">Back</button>
             </div>
 
-            <!-- STEP 4 – TIME TO VALUE (alle 6 vragen) -->
+            <!-- STEP 4 – NEW TIME TO VALUE QUESTIONS -->
             <div class="step" id="step4">
-                <h2 class="step-title text-center">Time to Value</h2>
+                <h2 class="step-title text-center">Time to Value – Benchmarks</h2>
 
-                <!-- VRAAG 1 -->
                 <div class="mb-3">
-                    <label>Type product</label>
-                    <select name="q1_type_product" class="form-control" required>
-                        <option value="" disabled selected>Select...</option>
-                        <option value="1">UI-tool / dashboard</option>
-                        <option value="2">Small automation</option>
-                        <option value="3">Integration of 2 systems</option>
-                        <option value="4">New software</option>
-                        <option value="5">AI / ML / IoT</option>
-                    </select>
+                    <label>Benchmark: Score 1 (days/weeks/months)</label>
+                    <input type="number" name="benchmark_1" class="form-control" required>
                 </div>
 
-                <!-- VRAAG 2 -->
                 <div class="mb-3">
-                    <label>Complexity</label>
-                    <select name="q2_complexiteit" class="form-control" required>
-                        <option value="" disabled selected>Select...</option>
-                        <option value="1">Very simple</option>
-                        <option value="2">Simple</option>
-                        <option value="3">Average</option>
-                        <option value="4">Complex</option>
-                        <option value="5">Very complex</option>
-                    </select>
+                    <label>Benchmark: Score 5 (days/weeks/months)</label>
+                    <input type="number" name="benchmark_5" class="form-control" required>
                 </div>
 
-                <!-- VRAAG 3 -->
                 <div class="mb-3">
-                    <label>Number of teams</label>
-                    <select name="q3_teams" class="form-control" required>
-                        <option value="" disabled selected>Select...</option>
-                        <option value="1">1 team</option>
-                        <option value="2">2 teams</option>
-                        <option value="3">3 teams</option>
-                        <option value="4">4 teams</option>
-                        <option value="5">More then 4 teams</option>
-                    </select>
-                </div>
-
-                <!-- VRAAG 4 -->
-                <div class="mb-3">
-                    <label>Sector</label>
-                    <select name="q4_sector" class="form-control" required>
-                        <option value="" disabled selected>Select...</option>
-                        <option value="1">Tech</option>
-                        <option value="2">Retail/Logististics</option>
-                        <option value="3">Finance/Industry</option>
-                        <option value="4">Energy/Healthcare</option>
-                        <option value="5">Government</option>
-                    </select>
-                </div>
-
-                <!-- VRAAG 5 -->
-                <div class="mb-3">
-                    <label>Data availability</label>
-                    <select name="q5_data" class="form-control" required>
-                        <option value="" disabled selected>Select...</option>
-                        <option value="1">All data is available</option>
-                        <option value="2">Most of the data is available</option>
-                        <option value="3">Some of the data is missing</option>
-                        <option value="4">A lot of data is missing</option>
-                        <option value="5">All data still needs to be collected</option>
-                    </select>
-                </div>
-
-                <!-- VRAAG 6 -->
-                <div class="mb-3">
-                    <label>External dependencies</label>
-                    <select name="q6_extern" class="form-control" required>
-                        <option value="" disabled selected>Select...</option>
-                        <option value="1">None</option>
-                        <option value="3">1 external party</option>
-                        <option value="4">2 external parties</option>
-                        <option value="5">+2 external parties</option>
-                    </select>
+                    <label>Benchmark: Score 10 (days/weeks/months)</label>
+                    <input type="number" name="benchmark_10" class="form-control" required>
                 </div>
 
                 <button type="button" class="btn btn-primary w-100" onclick="nextStep(5)">Next</button>
                 <button type="button" class="btn btn-outline-secondary w-100 mt-2" onclick="nextStep(3)">Back</button>
             </div>
 
-            <!-- STEP 5 – CONFIDENCE (NIEUW) -->
+            <!-- STEP 5 – TIME INPUTS -->
             <div class="step" id="step5">
+                <h2 class="step-title text-center">Time Inputs</h2>
+
+                <div class="mb-3">
+                    <label>Time to Market (days/weeks/months)</label>
+                    <input type="number" name="time_to_market" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label>Time to Business Value (days/weeks/months)</label>
+                    <input type="number" name="time_to_business" class="form-control" required>
+                </div>
+
+                <button type="button" class="btn btn-primary w-100" onclick="nextStep(6)">Next</button>
+                <button type="button" class="btn btn-outline-secondary w-100 mt-2" onclick="nextStep(4)">Back</button>
+            </div>
+
+            <!-- STEP 6 – CONFIDENCE -->
+            <div class="step" id="step6">
                 <h2 class="step-title text-center">Confidence</h2>
 
                 <div class="mb-3">
@@ -202,7 +158,7 @@
                 </div>
 
                 <button type="submit" class="btn btn-success w-100">Save Analysis</button>
-                <button type="button" class="btn btn-outline-secondary w-100 mt-2" onclick="nextStep(4)">Back</button>
+                <button type="button" class="btn btn-outline-secondary w-100 mt-2" onclick="nextStep(5)">Back</button>
             </div>
 
         </form>
