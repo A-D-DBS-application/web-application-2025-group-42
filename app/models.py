@@ -31,10 +31,8 @@ class User(db.Model):
     id = db.Column(db.BigInteger, primary_key=True)
     name = db.Column(db.String, nullable=False)
     email = db.Column(db.String, nullable=False)
-    role = db.Column(db.String, nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
 
-    # Supabase FK = column "company"
     company_id = db.Column("company", db.BigInteger, db.ForeignKey("company.id"), nullable=False)
 
     company = db.relationship("Company", back_populates="users")
@@ -68,30 +66,49 @@ class DataInput(db.Model):
 
     data_input_id = db.Column(db.BigInteger, primary_key=True)
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
+
     analysis_id = db.Column(UUID(as_uuid=True), default=uuid.uuid4, unique=True, nullable=False)
     category = db.Column(db.String, nullable=False, default="")
-    expected_profit = db.Column(db.Float)
-    total_investment_cost = db.Column(db.Float)
+
+    days_required = db.Column(db.BigInteger)
+    worked_hours = db.Column(db.Float)   # hours/day
+    cost_per_hour = db.Column(db.Float)
+    extern_costs = db.Column(db.Float)
+    fixed_costs = db.Column(db.Float)
+
+    gained_hours = db.Column(db.Float)
+    extra_turnover = db.Column(db.Float)
+    profit_margin = db.Column(db.Float)
+    horizon = db.Column(db.Float)
+
+    time_to_value = db.Column(db.BigInteger)
+
     company_id = db.Column(db.BigInteger, db.ForeignKey("company.id"), nullable=False)
     requirement_id = db.Column(db.BigInteger, db.ForeignKey("requirement.requirement_id"))
-    time_to_value = db.Column(db.BigInteger)
 
     company = db.relationship("Company", back_populates="data_inputs")
     requirement = db.relationship("Requirement", back_populates="data_inputs")
-
     results = db.relationship("Result", back_populates="data_input", lazy="dynamic")
 
 
 # -----------------------
-# RESULT
+# RESULTS (NEW + OLD METRICS)
 # -----------------------
 class Result(db.Model):
     __tablename__ = "results"
 
     id = db.Column(db.BigInteger, primary_key=True)
+
+    # NEW VALUES
     roi_percentage = db.Column(db.Float)
-    time_to_value_days = db.Column(db.BigInteger)
+    time_to_value = db.Column(db.BigInteger)
     confidence_value = db.Column(db.Float)
+
+    # OLD VALUES (HISTORICAL SNAPSHOT)
+    old_roi_percentage = db.Column(db.Float)
+    old_confidence_value = db.Column(db.Float)
+    old_time_to_value = db.Column(db.BigInteger)
+
     created_at = db.Column(db.Date)
 
     requirement_id = db.Column(db.BigInteger, db.ForeignKey("requirement.requirement_id"))
