@@ -98,7 +98,7 @@
                 <button type="button" class="btn btn-outline-secondary w-100 mt-2" onclick="nextStep(2)">Back</button>
             </div>
 
-            <!-- STEP 4 – TIME TO VALUE + CONFIDENCE -->
+            <!-- STEP 4 – TIME TO VALUE (alle 6 vragen) -->
             <div class="step" id="step4">
                 <h2 class="step-title text-center">Time to Value</h2>
 
@@ -138,7 +138,6 @@
                         <option value="3">3 teams</option>
                         <option value="4">4 teams</option>
                         <option value="5">More then 4 teams</option>
-
                     </select>
                 </div>
 
@@ -157,7 +156,6 @@
 
                 <!-- VRAAG 5 -->
                 <div class="mb-3">
-<<<<<<< HEAD
                     <label>Data availability</label>
                     <select name="q5_data" class="form-control" required>
                         <option value="" disabled selected>Select...</option>
@@ -171,7 +169,6 @@
 
                 <!-- VRAAG 6 -->
                 <div class="mb-3">
-
                     <label>External dependencies</label>
                     <select name="q6_extern" class="form-control" required>
                         <option value="" disabled selected>Select...</option>
@@ -181,6 +178,14 @@
                         <option value="5">+2 external parties</option>
                     </select>
                 </div>
+
+                <button type="button" class="btn btn-primary w-100" onclick="nextStep(5)">Next</button>
+                <button type="button" class="btn btn-outline-secondary w-100 mt-2" onclick="nextStep(3)">Back</button>
+            </div>
+
+            <!-- STEP 5 – CONFIDENCE (NIEUW) -->
+            <div class="step" id="step5">
+                <h2 class="step-title text-center">Confidence</h2>
 
                 <div class="mb-3">
                     <label>Confidence</label>
@@ -197,7 +202,7 @@
                 </div>
 
                 <button type="submit" class="btn btn-success w-100">Save Analysis</button>
-                <button type="button" class="btn btn-outline-secondary w-100 mt-2" onclick="nextStep(3)">Back</button>
+                <button type="button" class="btn btn-outline-secondary w-100 mt-2" onclick="nextStep(4)">Back</button>
             </div>
 
         </form>

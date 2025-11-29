@@ -93,7 +93,6 @@
                            value="{{ data_input.gained_hours }}" required>
                 </div>
 
-
                 <div class="mb-3">
                     <label class="form-label">Extra omzet per maand (€)</label>
                     <input type="number" step="0.01" name="extra_revenue_per_month" class="form-control"
@@ -116,7 +115,7 @@
                 <button type="button" class="btn btn-outline-secondary w-100 mt-2" onclick="nextStep(2)">Back</button>
             </div>
 
-            <!-- STEP 4: TIME TO VALUE INPUTS -->
+            <!-- STEP 4: TIME TO VALUE (ZONDER CONFIDENCE) -->
             <div class="step" id="step4">
                 <h2 class="text-center">Time to Value</h2>
 
@@ -197,7 +196,14 @@
                     </select>
                 </div>
 
-                <!-- CONFIDENCE -->
+                <button type="button" class="btn btn-primary w-100" onclick="nextStep(5)">Next</button>
+                <button type="button" class="btn btn-outline-secondary w-100 mt-2" onclick="nextStep(3)">Back</button>
+            </div>
+
+            <!-- STEP 5: CONFIDENCE (NIEUW) -->
+            <div class="step" id="step5">
+                <h2 class="text-center">Confidence</h2>
+
                 <div class="mb-3">
                     <label class="form-label">Confidence</label>
                     <select name="confidence" class="form-control" required>
@@ -213,7 +219,7 @@
                 </div>
 
                 <button type="submit" class="btn btn-success w-100">Save Changes</button>
-                <button type="button" class="btn btn-outline-secondary w-100 mt-2" onclick="nextStep(3)">Back</button>
+                <button type="button" class="btn btn-outline-secondary w-100 mt-2" onclick="nextStep(4)">Back</button>
             </div>
 
         </form>
