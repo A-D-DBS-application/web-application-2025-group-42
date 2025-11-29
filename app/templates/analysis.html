@@ -206,6 +206,17 @@
 
 <script>
 function nextStep(step) {
+    const currentStep = document.querySelector('.step.active');
+    const inputs = currentStep.querySelectorAll('input, select');
+
+    for (let input of inputs) {
+        if (input.hasAttribute('required') && !input.value) {
+            alert('Please fill in all required fields before proceeding.');
+            input.focus();
+            return; 
+        }
+    }
+
     document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
     document.getElementById('step' + step).classList.add('active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
