@@ -43,7 +43,13 @@
     <label for="founded_date">Founded Date</label>
     <input type="date" name="founded_date" required>
     <textarea name="description" placeholder="Description (optional)" rows="3"></textarea>
-    <input type="text" name="country" placeholder="Country" required>
+    <label for="country">Country</label>
+    <select name="country" required>
+        <option value="" disabled selected>Select country</option>
+        {% for country in countries %}
+            <option value="{{ country }}">{{ country }}</option>
+        {% endfor %}
+    </select>
 
     <button type="submit">Create account</button>
 </form>
